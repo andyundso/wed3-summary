@@ -739,5 +739,178 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
          \end{lstlisting}
 
         \includegraphics[width=\linewidth]{angular_routing}
+
+        \section{.NET}
+        Weshalb ASP.NET Core: Enterprise Framework, Kompilierbare Sprache (C\#), OS unabhängig.
+        \textbf{Attribute}: intensiv eingesetzt (Um Konventionen zu übersteuern bzw zu unterstützen, Schnittstelle für Zusatzinformationen für Framework, Kann via "Reflection" ausgelesen werden).
+        \begin{lstlisting}
+          [Required]
+          [StringLength(100, MinimumLength = 10)]
+          public string Name {get; set; }
+
+          [HttpPost]
+          public ActionResult About()
+        \end{lstlisting}
+        % Asseembly.GetEntryassembly().GetTypes() -> Findet alle Typen mit einem bestimmten Attribut
+        % Activator.CreateInstance(typesWithAttribute.First()) -> Erzeugt eine Instanz von diesem Type
+
+        \textbf{Extension Methods}: C\# erlaubt es existierenden Klassen Methoden "hinzuzufügen"
+        \begin{lstlisting}
+          string s = "Hello Extension Methods";
+          int i = s.WordCount();
+
+          public static class MyExtensions
+          {
+            public static int WordCount(this string str) {
+              return str.Split(new char[] {' ', '.', '?'}).Length;
+            }
+          }
+        \end{lstlisting}
+
+        \textbf{Async Await}
+        \begin{lstlisting}
+          static async Task Main(string[] args)
+          {
+            Console.WriteLine("--");
+            await RunAsync();
+            Console.WriteLine("--");
+            Console.ReadLine();
+          }
+
+          public static Task<string> Send()
+          {
+            return Task.Run(() => {
+              Console.WriteLine("Send!");
+              return "nachricht gesendet";
+            });
+          }
+
+          public static async Task<bool> RunAsync()
+          {
+            Console.WriteLine("Start Send");
+            Console.WriteLine(await Send());
+            Console.WriteLine("End Send");
+            return true;
+          }
+
+          % outputs
+          % -- start send send! nachricht gesendet end send -- 
+        \end{lstlisting}
+        \textbf{Convention over configuration (or coding by convention)}: seeks to decreasse the numbere of decision that developers need to make, gaining simplicity, and not necessarily losing flexibility.
+        Nachteile: Magie, Ev. Schwer anzupassen (falls Anforderungen nciht inss Schema passen)
+        \textbf{Multi-Threading}: Besitzt Thread Pool wo grösse konfigurierbar. Wählt für jeden Request einen Thread aus Pool für bearbeitung.
+        Thread solange blockiert bis Request abgeschlossen (oder vorzeitig zurückgegeben -> async/await)
+        Keine geteilten Daten in Controller / Services halten (z.B. Static Variablen, ASP.NET instanziert für jeden Request neuen Controller)
+        \textbf{MVVM} View: Markup Language, was Benutzer sieht, Kommunikation zu ViewModel via Bindings. View Model: Daten für View aufbereiten, Value Converter, UI Logik. Model: Daten, Services, Domain Logik
+        \textbf{Middlewaree}: Request durchläuft Stack von Middlewares, jede kann Request abbrechen (bsp: autorisierung, MVC, welcomepage..)
+        Vier verschiedene Arten Middleware zu registrieren; (neue Middleware registrieren, Verzweigung für Anfragepfad erzeugen, Request Terminieren, CustomMiddleware als Klasse aufrufen)
+        \begin{lstlisting}
+          app.Use(async (context, next) => {
+            await next.Invoke();
+          });
+          app.Map("/logging", builder => {
+            builder.Run(async (context) => {
+              await context.Response.WriteAsync("Hello There");
+            });
+          })
+          app.Run(async (context) => {
+            await context.Response.WriteAsync("dead ig");
+          });
+          app.UseMiddleware<RequestLoggerMiddlewaree()>;
+        \end{lstlisting}
+        \textbf{Dependency Injection}: Reduziert hohe Kopplung zwischen verschiedenen Klassen, Verbesserung Testbarkeit. ASP.NET kommt mit primitiven Dependency Injectoin Container.
+        Idee: Klasse erwähnt welche Interfaces benötigt werden, resolver sucht im Container nach Klasse und übergibt. Im Container wurden Interefaces mit konktreten Klassen regiistriert, falls keine vorhannden, Fehler geworfen.
+        % doubt that we need to do sthm like this at exam... could still add thee registration if needed...
+        DI - Lifetime: Transient: created each time they are requested. Best for lightweeight, stateless services. Scoped: created once per request. Singelton: created the first time they are requested and then every subsequent request will use the same instance.
+        \textbf{Projekt-Struktur}
+        wwwroot: statischen Inhalte der Webseite z.B. CSS/JS/HTML, keine sensitiven Daten
+        appsettings.json: Einstellungen der Webseite z.B. Coonnection-String zur DB
+        Programm.cs: Einstiegspunkt von der Web Applikation
+        Startup.cs: Konfiguriert die Web Applikation 
+        \textbf{Pages}: Geeignte für Web Applikationen mit "Page" Fokus (Alternative unnd vereinfachte Variantee vom MVC, Router muss nicht konfiguriert werden, Best-Practices for SSR)
+        Routing: generiert anhand von URL Antwort, URL wird auf Aktion: "gemappt" (Routing-Module). Bei Aufruf im Folder "/pages/" nach Page gesucht und ausgeführt (default case insensitive)
+        MVVM: Besteht aus 2 Files, *.cshtml (View mit Razor), *.cshtml.cs (Viewmodel)
+        \begin{lstlisting}
+          @page
+          @model HelloWorldModel
+          @{
+            ViewData["Title"] = "HelloWorld";
+          }
+
+          <h1>@Model.HelloWorld</h1>
+
+          public class HelloWorldModel : PageModel
+          {
+            public string HelloWorld {get;set;}
+            public void OnGet()
+            {
+              HelloWorld = "Hi World!";
+            }
+          }
+        \end{lstlisting}
+        @model: Beschreibt Type vom View Model dieser Seite, wird in Var Model abgelegt
+        PageModel: Basis Klassse mit Hilfsfunktionen (Redirects / Event-Hooks), Aufbereitung der Daten für die View
+        MVVM - Model: kann pro HTTP-Verb eine Funktion definieren die davor aufgerufen wird (OnGet, OnPost), Body und Query werden automatisch gemappt, Parameter werden als Argumente übergeben, können auch alss Klasse entgegen genommen werden.
+        Mit [BindProperty] kann auf das Kopieren von Properties verzichtet werden, nutzen falls Properties 1:1 der View übergegebn werden [BindProperty(SupportsGet = true)]
+        \begin{lstlisting}
+          public class PostModel : PageModel
+          {
+            [BindProperty]
+            public string EchoText {get; set;}
+          }
+        \end{lstlisting}
+        View: @paage definiert Razor-File als Page, @page "/test/{id?}" überschreibt Default-Routing Informationen
+        kann auf verschiedene Arten zugegriffen werden:
+        \begin{lstlisting}
+          @page "/test/{id:int?}"
+          @model Ex.Pages.Page.RoutingModel
+          @{
+            ViewData["Title"] = "Routing";
+          }
+          <h1>Routing</h1>
+          @RouteData.Values["id"]
+
+          public class RoutignModel : PageModel
+          {
+            public int Id {get;set;}
+            [BindProperty(SupportsGet = true, Name="Id")]
+
+            public int Id2 {get;set;}
+            public void OnGet(int id)
+            {
+              Id2=id
+            }
+          }
+        \end{lstlisting}
+        \textbf{Razor}: Wichtige Datein: Layout: Shared/\_layout.cshtml: definiert generelle Layout für APplikation, definiert Sectionns welche von Content Page abgefüllt werden.
+        Beinhaltet Struktur der Webseite, welche für jede Seite identisch sein sollte
+        % not sure if makes sense to add this default information here regarrding @RenderBody() and @RenderSecction("scripts", required: false)...
+
+        \_ViewStart.cshtml: Hierarchisch, beinhaltet Codee welcher vor den Razor Files ausgeeführt wird z.B. Layout für alle Pages
+        \_ViewImports.cshtml: Hierarchisch, Namespaces \& Tag-Helpers können in diesem File registriert werden
+
+        \textbf{Tag Helpers}: Ermöglichen Code an HTML Tags zu binden
+        \begin{lstlisting}
+          <email mail-for="support@examl.com"></email>
+          <a href="mailto:support@example.com">support@example.com</a>
+
+          public classs EmailTagHelper : TagHelper 
+          {
+            public string MailFor {get;set;}
+            public override void Process(TagHelperContext context, TagHelperOutput ouput)
+            {
+              output.TagName = "a";
+              output.Attributes.SetAttrbutes("href", "mailto:" + MailFor);
+              output.Content.SetContent(MailFor);
+            }
+          }
+        \end{lstlisting}
+        % lohnt es sich hier ein Beispiel zu definieren wie man es added?
+        Daten zwischen Razor-Datein: Daten im View Model übergeben, stehen nur in der zugehörigen View zur Verfügung. können als ViewData oder TempData gekennzeichnet werden.
+        TempData (überlebt eineen Redirect)
+
+        \textbf{AJAX}
+        Handlers: Pages können weiter Actions als "handler" anbieten; Schema; On[Method][Name] z.B. OnPostEcho, aufgerufen via: [METHOD] /[PAGE]?handler=[HandlerName] -> GET /Ajax?handler=autocomplete
+        Erlaubte Rückgabewerte sind vom Type IActionResult (Bsp; ContentResult: JsonResult, Status: NotFoundResult, Redirects: RedirectToPage)
     \end{multicols}
 \end{document}
