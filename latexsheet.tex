@@ -912,5 +912,42 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \textbf{AJAX}
         Handlers: Pages können weiter Actions als "handler" anbieten; Schema; On[Method][Name] z.B. OnPostEcho, aufgerufen via: [METHOD] /[PAGE]?handler=[HandlerName] -> GET /Ajax?handler=autocomplete
         Erlaubte Rückgabewerte sind vom Type IActionResult (Bsp; ContentResult: JsonResult, Status: NotFoundResult, Redirects: RedirectToPage)
+
+        \textbf{Entity Framework (EF)}: objektrelationale Zuordung, die Entwickler über domänenspezifsche Objekte die Nutzung relationaler Daten ermöglicht. (wenig Code, viele Konvention, OR-Mapper). SQL-Rows auf Klasse mappen, Relationen auflöseen udn richtig setzen.
+        Code First benötigt; type discovery: welche Klassen gehören in die DB, Connection String: Wohin mit Daten, DbContext: Entry Point
+        \begin{lstlisting}
+          public class Order
+          {
+            public long Id {get;set;}
+            [Required]
+            public string Name {get;set;}
+            public DateTime Date {get;set;}
+            public virtual ApplicationUser Customer {get;set;}
+            public Order() {
+              Date = DateTime.Now;
+            }
+          }
+        \end{lstlisting}
+        public [long/string] Id -> automatisch Primary key von Entity
+        public virtual ApplicationUser Customer -> automatisch als Navigation Properety erkannt (CustomerId -> wird als Foreign Key für Customer Property erkannt)
+        [Required] -> NotNull, [NotMapped] -> nicht in DB geschrieben, [Key] -> Definiert Primary Key der Entity, [MaxLength(10)] -> Beeinflusst die Allokatingrösse des Feldes in DB
+
+        % migrations explizit ausgelassen, kann aber hinzugefügt werden falls nötig..
+        \textbf{Validation}: Client: JQuery Valdation, Server: ASPNET, z.B. Annotieren der Klasse z.B. [Required] oder [StringLength(60, MinimumLength=3)] (Sind kombinierbar), Razor anpassen (Validation ins DOM einfügen), Server Side validierung
+
+        \textbf{ASPNET identity features}: nimmt probleme wie user validation oder passwort stärke ab (gibt Identity Klassen die via DI injected werden können z.B. UserManager oder RoleManager)
+        [Authorize] -> User muss authentifiziert sein (kann auf Controller/Pages definiert werden), [AllowAnonymous] -> erlaubt für spezifische Action anonymen Zugriff
+
+        this.User (Controller/Pages): Beinhaltet den eingeloggten User, Type is ClaimsPrincipal (Applicationuser)
+        Claim: Statement über User vom Identity Provider ausgestellt
+        Manuell authentifizerbar via User.Identity.isAuthenticated
+        Autorisierung: via Attrbute [Authorize(Roles="Admin, PowerUser")] oder [Authorize(Policy="OlderThan18")] oder via Services z.B. await \_userManager.isInRoleAsync(user, "Admin")
+        Policies ermöglichen komplexere Regeln zu definieren
+        \begin{lstlisting}
+          options.AddPolicy("Founders", policy => {
+            policy.RequireClaim(ClaimTypes.Name, "foo.bar@ost.ch");
+          });
+        \end{lstlisting}
+        % full part on testing and DB Mocking i left out, can be added if needed but doesn't seem as important as other things I'd say
     \end{multicols}
 \end{document}
