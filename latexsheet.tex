@@ -481,8 +481,9 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         Basiert auf MVC oder MVVM.
         Eine Komponente sollte so klein und zusammenhängend wie möglich implementiert werden, um die Testbarkeit / Wartbarkeit / Wiederverwendbarkeit zu unterstützen.
         Komponenten kontrollieren die View (genau eine View pro Komponente).
-        Mittels Selektor kann Komponent in anderen Views verwendet werden (entweder tag-name oder CSS-Selektor ( id-selector #topHeader)), braucht Registierung im ngModule bei \lstinline{declarations} und \lstinline{exports}.
-        Lifecycle wird verwaltet von Angular (Hydration, Update, Dehydration), können mittels Hooks abgefangen werden.
+        Mittels Selektor kann Komponent in anderen Views verwendet werden (entweder tag-name oder CSS-Selektor ( id-selector \#topHeader)), braucht Registierung im ngModule bei \lstinline{declarations} und \lstinline{exports}.
+        Lifecycle wird verwaltet von Angular (Hydration, Update, Dehydration), können mittels Methoden wie \lstinline{ngOnInit} und \lstinline{ngOnDestroy} erweitert werden.
+        Komponent braucht Deklaration wie \lstinline{implements OnInit, OnDestroy}, damit Methoden verwendet werden können.
         View-Code muss gültiges HTML5 sein.
 
         \begin{lstlisting}
@@ -533,27 +534,88 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         \textbf{Services}: Bietet Logik für jeden Wert, jede Funktion oder jedes Merkmal, das Ihre Anwendung benötigt (TypeScript class).
         Werden mittels Dependency Injection erstellt, wenn Komponenten Service-Abhängigkeit deklarieren.
+        \textbf{Service-Kommunikation mit UI}: Theoretisch alles mittels RxJS möglich, in WED3 aber mit \lstinline{EventEmitter} behandelt (siehe oben).
+        RxJS implementiert das Observer-Pattern für JavaScript.
+        \textbf{Hot Observables}: Sequenz von Events wie Mausklicks, verfügbar für alle Subscriber.
+        \textbf{Cold Observables}: Starten erst bei ersten Subscriber, schliessen sobald Task beendet.
+        \textbf{Data Resources}: Abstrahieren HTTP-Kommunikation, um Daten abzuholen.
+        Jeweils \lstinline{HttpClient} verwenden, verwendet Cold Observerables.
 
         \begin{lstlisting}
-        @Injectable({ providedIn: 'root' })
-        export class CounterService {
-            private model: CounterModel = new CounterModel();
-            public load(): CounterModel {... }
-            public up(): CounterModel {... }
+        export class SampleModel { }
+
+        @Injectable({ providedIn: 'root')
+        export class SampleService {
+            private samples: SampleModel[] = []; // simple cache
+            public sampleChanged: EventEmitter<SampleModel[]> = new EventEmitter<SampleModel[]>();
+            constructor(
+                private dataResource: SampleDataResourceService) {
+            }
+            load(): void {
+                this.dataResource.get().subscribe(
+                    (samples: SampleModel[]) => { // update cache, emit change event, ...
+                        this.samples = samples;
+                        this.sampleChanged.emit(this.samples);
+                    });
+            }
         }
 
-        @Component(...)
-        export class CounterComponent {
-            counter?: CounterModel;
-            constructor(private counterService: CounterService) {
-                this.counter = counterService.load();
+        @Component({ ... })
+        export class SampleComponent implements OnInit, OnDestroy {
+            private samples: SampleModel[];
+            private samplesSubscription: Subscription;
+            constructor(private sampleService: SampleService) { }
+
+            ngOnInit() {
+                this.samplesSubscription = this.sampleService.samplesChanged.subscribe(
+                    (data: SampleModel[]) => { this.samples = data; });
+            }
+
+            ngOnDestroy() {
+                this.samplesSubscription.unsubscribe();
             }
         }
         \end{lstlisting}
 
+        HTTP-Requests können abgefangen und modifiziert werden.
+
+        \begin{lstlisting}
+            @NgModule({ ...})
+            export class SampleModule {
+                static forRoot(config?: {}): ModuleWithProviders {
+                    return {
+                        ngModule: SampleModule,
+                        providers: [
+                            {
+                                provide: HTTP_INTERCEPTOR,
+                                useClass: AuthInterceptor,
+                                multi: true
+                            }
+                        ]
+                    }
+                }
+            }
+
+            @Injectable()
+            export class AuthInterceptor implements HttpInterceptor {
+                constructor(private store: SecurityTokenStore) { }
+
+                public intercept(req: HttpRequest<any>, next: HttpHandler) {
+                    const authReq = req.clone({
+                        setHeaders: {
+                            Authorization: `Bearer ${this.store.token}`
+                        },
+                        withCredentials: true
+                    });
+
+                    return next.handle(authReq);
+                }
+            }
+        \end{lstlisting}
+
         \textbf{Template-driven forms}: Angular Template-Syntax mit den formularspezifischen Direktiven und Techniken.
         Erzeugt weniger Code, platziert aber die Validierungslogik in HTML.
-        \textbf{Reactive (or model-driven) forms}: Import von \lstlinline{ReactiveFormsModule} nötig, Form und Validations werden im Controller gebaut, mehrere asynchrone Validierungen möglich.
+        \textbf{Reactive (or model-driven) forms}: Import von \lstinline{ReactiveFormsModule} nötig, Form und Validations werden im Controller gebaut, mehrere asynchrone Validierungen möglich.
         Nicht Teil der Lektüre!
 
         \begin{lstlisting}
@@ -576,5 +638,46 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             }
         }
         \end{lstlisting}
+
+        \textbf{Component Transclusion / Content Projection}: Selbiges wie Reacts \lstinline{props.children}.
+
+        \begin{lstlisting}
+        <wed-navigation>
+            <h1 wed-title>WED3 Lecture</h1>
+            <menu><!-- ... --></menu>
+        </wed-navigation>
+
+        <header>
+            <ng-content select='[wed-title]'> </ng-content>
+        </header>
+        <nav>
+            <ng-content select='menu'>
+            </ng-content>
+        </nav>
+
+        <wed-navigation>
+            <header>
+                <h1 wed-title>WED3 Lecture</h1>
+            </header>
+            <nav>
+                <menu><!-- ... --></menu>
+            </nav>
+        </wed-navigation>
+        \end{lstlisting}
+
+
+
+        \begin{lstlisting}
+        var subscription = this.http.get('api/samples').subscribe(
+            function (x) { /* onNext -> data received (in x) */ },
+            function (e) { /* onError -> the error (e) has been thrown */ },
+            function () { /* onCompleted -> the stream is closing down */ }
+        );
+        \end{lstlisting}
+
+        \textbf{Routing}: Routing Table mappt Routen zu Kompontenten.
+        Oberste Routen registrieren mit \lstinline{forRoot()}, Subroutes mit \lstinline{forChild()}.
+
+        \includegraphics[width=\linewidth]{angular_routing}
     \end{multicols}
 \end{document}
