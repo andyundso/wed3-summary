@@ -949,5 +949,33 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           });
         \end{lstlisting}
         % full part on testing and DB Mocking i left out, can be added if needed but doesn't seem as important as other things I'd say
+
+        \textbf{API Routing}: Funktioniert über Attribute [Route] definieret einen neuen Eintag im Router, [HttpMethod] bei Actions ist required
+        [Route("api/[controller]")] -> Klassen def -> [HttpGet] public IEnumerable<Value> Get()  oder [HttpGet("{id}")] public Value Get(int id)
+        % mehr Beispiel needed? 
+
+        % swagger configuration scheint auch nicht relevant / brauchbar zu sein
+
+        \textbf{REST Hateoas}: Idee: Verlinkte Daten als Links zur Verfügung stellen 
+        % again here, wirkt mir ein zu spezifisch und zu viel Boilerplate das es relevant ist
+
+        \textbf{Exception Handling}: Error Handling soll generisch funktionieren -> Gibt Exception die notwendige Daten sammelt, globalen Errorhandler, welche Exception für Client aufbereitet, bei ungültigen Zustand wird Custom Exception ausgelöst.
+        ASP.NET MVC erlaubt es Filter zu definieren, welche für jede Action aufgerufen werden 
+        \begin{lstlisting}
+          services.AddMvc(options => {
+            options.Filters.Add(new ValidationModelAttribute());
+          }));
+
+          public class ValidateModelAttribute:ActionFilterAttribute{
+            public override void OnActionExecuting(ActionExecutingContext context) {
+              if (!context.ModelStatee.IsValid) throw new ServicExceptionType.ForbiddenByRule);}
+            }
+          }
+        \end{lstlisting}
+        
+        % what JWT is and what it does we know, doesn't seem to make sense to add it... same for the info "ony send tokenss via Https"
+        % and that it can be activated via app.useHttpsRedirection()
+      
+        % integration tests also seem "irrelevant" but nice to know ig...
     \end{multicols}
 \end{document}
