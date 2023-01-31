@@ -454,6 +454,37 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         export class CoreModule { }
         \end{lstlisting}
 
+        \textbf{Module-Importe}: Standardmässig wird alles aus dem Modul importiert und Dependency-injected.
+        \lstinline{forChild(config?)}: Statische Methode auf dem Modul, erlaubt Services für den aktuellen Modul-Level zu konfigurieren.
+        \lstinline{forRoot(config?)}: Statische Methode auf dem Modul, injected und konfiguriert Services global.
+        Nur im Root-Modul machen!
+        \lstinline{providedIn: 'root'} bevorzugen, wenn Services keine Konfiguration benötigen.
+
+        \includegraphics[width=\linewidth]{angular_module_big_picture}
+
+        \textbf{Modultypen}: Root / App Modul: Einstiegspunkt in die Applikation.
+        Exportiert nichts.
+        Konventionell AppModule genannt und existiert in einer Datei namens app.module.ts.
+        Importiert BrowserModule, die jede Browser-Anwendung importieren muss
+
+        \textbf{Feature-Modul}: Teile der Applikation.
+        Es ist die beste Praxis, Feature-Module in Domain-, Routing-, Service-, Widget- und Lazy-Module aufzuteilen (siehe unten).
+        Ermöglicht die Zuweisung von Entwicklungsaufgaben an verschiedene Teams.
+
+        \textbf{Shared-Modul}: "Toolkit" der Applikation, alles was irgendwie in kein Modul passt.
+        Keine app-weiten Singleton-Anbieter (Dienste) in einem gemeinsamen Modul angeben.
+
+        \textbf{Core-Modul}: Initialisiert globale Services.
+        Ein "lazy-loaded"-Modul, das dieses gemeinsame Modul importiert, erstellt seine eigene Kopie des Dienstes.
+        Wird nur vom Root-Modul importiert, der Import in ein anderes Modul, insbesondere in ein "Lazy-Load"-Modul, widerspricht der Absicht und kann zu einem Laufzeitfehler führen.
+
+        \textbf{Lazy Modules}: Ähnlich wie Feature-Modules, werden aber lazy loadet wenn angefragt mittels Dependency Injection.
+
+        \textbf{Feature-Modul-Untertypen}: Domain-Modul: Bereitstellung einer auf einen bestimmten Anwendungsbereich zugeschnittenen Benutzeroberfläche.
+        Routing-Modul: Gibt die Routing-spezifischen Konfigurationseinstellungen des Feature- (oder Root-) Moduls an.
+        Service-Modul: Bietet Versorgungsdienste wie Datenzugriff und Nachrichtenübermittlung.
+        Widget Modul: Macht Komponenten, Direktiven und Pipes für externe Module verfügbar.
+
         \textbf{Directives}: Enthält Anweisungen zur Transformation des DOM (TypeScript class).
         Besitzen kein Template.
         Brauchen \lstinline{@Directive()}-Decorator.
@@ -523,8 +554,8 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \begin{lstlisting}
         @Component({...})
         export class NavigationComponent {
-        @Output() click = new EventEmitter<any>();
-        @Input() title: string;
+            @Output() click = new EventEmitter<any>();
+            @Input() title: string;
         }
 
         <wed-navigation(click)="..."[title]="..."></wed-...>
@@ -677,6 +708,35 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         \textbf{Routing}: Routing Table mappt Routen zu Kompontenten.
         Oberste Routen registrieren mit \lstinline{forRoot()}, Subroutes mit \lstinline{forChild()}.
+        \lstinline{forRoot()} kennt auch Router-Service, welcher Singleton ist in Applikation.
+        Benötigt \lstinline{<base href="/">} im Header für relative URL oder \lstinline{APP_BASE_HREF} Variable.
+        \lstinline{<router-outlet>} definiert, wo Routen angezeigt werden.
+        \lstinline{'hero/:id'} ID ist hier eine Variable.
+        \lstinline{redirectTo} erlaubt Weiterleitung.
+        \lstinline{'**'} ist die Wild-Card-Route für 404.
+        Routen werden aufgelöst nach "first come first served".
+        Verschachtelung möglich mittels \lstinline{children}, Parent benötigt dann weiteres Router Outlet.
+
+        \begin{lstlisting}
+         const appRoutes: Routes = [
+            {
+                path: '', component: WelcomeComponent,
+                children: [
+                    { path: ':id', component: SamplesDetailComponent },
+                ]
+            },
+            {
+                path: 'config',
+                loadChildren: () => import('./cfg/cfg.module').then(m => m.CfgModule), canLoad: [AuthGuard]
+            }
+        ];
+
+         @NgModule({
+            imports: [ RouterModule.forRoot(appRoutes) ],
+            exports: [ RouterModule ]
+         })
+         export class AppRoutingModule {}
+         \end{lstlisting}
 
         \includegraphics[width=\linewidth]{angular_routing}
     \end{multicols}
