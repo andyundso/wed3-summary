@@ -327,7 +327,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \lstinline{createSlice} erstellt neue Stateobjekte, Reduce-Funktionen und Aktionen.
         Action-Type im unteren Beispiel ist \lstinline{balance/transfer}.
         Mittels immer.js scheinbare, direkte Änderungen am State möglich.
-        
+
         \begin{lstlisting}
         const balanceSlice = createSlice({
           name: "balance",
@@ -422,5 +422,43 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           expect(screen.getByRole('button')).toBeDisabled()
         })
         \end{lstlisting}
+
+
+        \section{Angular}
+
+        \includegraphics[width=\linewidth]{base_angular}
+
+        TypeScript-basiert, mit Dependency Injection, 2-Way-Bindings, klar strukturiert.
+        Sollte verwendet werden für lang lebende und komplexe Applikationen.
+        Historie: Modernes Angular seit v2, v1 wird AngularJS genannt, keine Gemeinsamkeiten.
+        v3 ausgelassen, um Paketnamen zu harmonisieren.
+        \lstinline{npx ng new my-app} legt neue Applikation an (Paket lokal installieren mit \lstinline{npm install @angular/cli})
+
+        \includegraphics[width=\linewidth]{angular_logical_layers}
+
+        \textbf{Dependency Injection}: Registration beim Container, Request, Resolve durch Container, Fullfill (TypeScript module/s).
+        \textbf{ngModules}: Ein zusammenhängender Codeblock, der eng miteinander verbundenen Fähigkeiten gewidmet ist (TypeScript class).
+        Jede App hat mindestens ein Modul, das Root-Modul.
+        Exportieren Features wie Services oder Direktive für andere Module.
+        ngModule-Deklaration selbst wird in ein TypeScript-Modul eingefügt (meistens über \lstinline{index.ts}).
+
+        \begin{lstlisting}
+        @NgModule({
+            exports: [] // The subset of declarations that should be visible and usable in the component templates of other modules.
+            imports: [CommonModule], // Specifies the modules which exports/providers should be imported into this module.
+            declarations: [], // The view classes that belong to this module (components, directives and pipes).
+            providers: [], // Creators of services that this module contributes to the global collection of services (Dependency Injection Container); they become accessible in all parts of the app.
+            bootstrap: [] // The main application view, called the root component. Only the root module should set this property.
+        })
+
+        export class CoreModule { }
+        \end{lstlisting}
+
+        \textbf{Directives}: Enthält Anweisungen zur Transformation des DOM (TypeScript class).
+        \textbf{Components}: Eine Komponente ist eine Richtlinie mit einer Vorlage; sie steuert einen Abschnitt der Ansicht (HTML File / (S)CSS / \ldots).
+        Basiert auf MVC oder MVVM.
+        Eine Komponente sollte so klein und zusammenhängend wie möglich implementiert werden, um die Testbarkeit / Wartbarkeit / Wiederverwendbarkeit zu unterstützen.
+        \textbf{Metadata}: Metadaten beschreiben eine Klasse und sagen Angular, wie sie zu verarbeiten ist (TypeScript decorator).
+        \textbf{Services}: Bietet Logik für jeden Wert, jede Funktion oder jedes Merkmal, das Ihre Anwendung benötigt (TypeScript class).
     \end{multicols}
 \end{document}
