@@ -455,10 +455,126 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \end{lstlisting}
 
         \textbf{Directives}: Enthält Anweisungen zur Transformation des DOM (TypeScript class).
+        Besitzen kein Template.
+        Brauchen \lstinline{@Directive()}-Decorator.
+        Structural directives: Verändern DOM.
+        Diese werden im Hintergrund zu \lstinline{<ng-template>} umgewandelt.
+        \lstinline{<ng-template>} kann auch verwendet werden, wenn kein HTML-Element benötigt wird.
+        \lstinline{<ng-template>} können nicht mit weiteren Structural directives verwendet werden.
+        Attribute directives: Ändern des Aussehens oder Verhaltens eines vorhandenen Elements.
+
+        \begin{lstlisting}
+        <div *ngIf="hasTitle"><!-- shown if title available --></div>
+        <div [ngStyle]="{ 'font-size': isSpecial ? 'x-large' : 'smaller' }">
+                 <!-- render element -->
+        </div>
+        \end{lstlisting}
+
+        \textbf{Template Reference Variables}: Verfügbar im gesamten Template.
+
+        \begin{lstlisting}
+        <input placeholder="phone number" #phone>
+        <button (click)="callPhone(phone.value)">Call</button>
+        \end{lstlisting}
+
         \textbf{Components}: Eine Komponente ist eine Richtlinie mit einer Vorlage; sie steuert einen Abschnitt der Ansicht (HTML File / (S)CSS / \ldots).
         Basiert auf MVC oder MVVM.
         Eine Komponente sollte so klein und zusammenhängend wie möglich implementiert werden, um die Testbarkeit / Wartbarkeit / Wiederverwendbarkeit zu unterstützen.
+        Komponenten kontrollieren die View (genau eine View pro Komponente).
+        Mittels Selektor kann Komponent in anderen Views verwendet werden (entweder tag-name oder CSS-Selektor ( id-selector #topHeader)), braucht Registierung im ngModule bei \lstinline{declarations} und \lstinline{exports}.
+        Lifecycle wird verwaltet von Angular (Hydration, Update, Dehydration), können mittels Hooks abgefangen werden.
+        View-Code muss gültiges HTML5 sein.
+
+        \begin{lstlisting}
+        <p>Your team is <strong>{{counter.team}}</strong></p>
+        <p>Your current count is
+            <strong>{{counter.count}}</strong>
+        </p>
+        <form>
+            <button (click)="up($event)">Count Up</button>
+        </form>
+
+        @Component(...)
+        export class CounterComponent implements OnInit {
+            counter: CounterModel = new CounterModel(); up(event: UIEvent): void {
+                this.counter.count++;
+                event.preventDefault();
+            }
+        }
+        \end{lstlisting}
+
+        \textbf{Bindings}: Two Way Binding / Banana in a box [( ... )].
+        One Way (from View to Model / Event Binding) ( ... ).
+        One Way (from Model to View / Property Binding) [ ... ] or {{ ... }}.
+
+        \begin{lstlisting}
+        public counter: any = {
+            get team() { return null }, set team(val) { }, eventHandler: () => { }
+        }
+
+        <input type="text" [(ngModel)]="counter.team">
+        <button (click)="counter.eventHandler($event)">
+        <p>... {{counter.team}} ..</p>
+        \end{lstlisting}
+
+        Die Bindung an Ziele muss als Inputs oder Outputs deklariert werden.
+
+        \begin{lstlisting}
+        @Component({...})
+        export class NavigationComponent {
+        @Output() click = new EventEmitter<any>();
+        @Input() title: string;
+        }
+
+        <wed-navigation(click)="..."[title]="..."></wed-...>
+        \end{lstlisting}
+
         \textbf{Metadata}: Metadaten beschreiben eine Klasse und sagen Angular, wie sie zu verarbeiten ist (TypeScript decorator).
+
         \textbf{Services}: Bietet Logik für jeden Wert, jede Funktion oder jedes Merkmal, das Ihre Anwendung benötigt (TypeScript class).
+        Werden mittels Dependency Injection erstellt, wenn Komponenten Service-Abhängigkeit deklarieren.
+
+        \begin{lstlisting}
+        @Injectable({ providedIn: 'root' })
+        export class CounterService {
+            private model: CounterModel = new CounterModel();
+            public load(): CounterModel {... }
+            public up(): CounterModel {... }
+        }
+
+        @Component(...)
+        export class CounterComponent {
+            counter?: CounterModel;
+            constructor(private counterService: CounterService) {
+                this.counter = counterService.load();
+            }
+        }
+        \end{lstlisting}
+
+        \textbf{Template-driven forms}: Angular Template-Syntax mit den formularspezifischen Direktiven und Techniken.
+        Erzeugt weniger Code, platziert aber die Validierungslogik in HTML.
+        \textbf{Reactive (or model-driven) forms}: Import von \lstlinline{ReactiveFormsModule} nötig, Form und Validations werden im Controller gebaut, mehrere asynchrone Validierungen möglich.
+        Nicht Teil der Lektüre!
+
+        \begin{lstlisting}
+        <form (ngSubmit)="doLogin(sampleForm)" #sampleForm="ngForm">
+            <input type="text" class="form-control" id="name" required [(ngModel)]="model.name" name="name" #nameField="ngModel">
+            <div [hidden]="nameField.valid || nameField.pristine" class="alert alert-danger">
+                Name is required
+            </div>
+
+            <button type="submit" class="btn btn-success" [disabled]="!sampleForm.form.valid">Submit</button>
+        </form>
+
+        @Component({ ... })
+        export class SampleComponent {
+            public doLogin(f?: NgForm): boolean {
+                if (f?.form.valid) { // store data
+                    Component
+                    return false; // avoid postback }
+                }
+            }
+        }
+        \end{lstlisting}
     \end{multicols}
 \end{document}
