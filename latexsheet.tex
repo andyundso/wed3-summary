@@ -802,6 +802,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \textbf{Angular-Tooling}: Angular State Inspector, Redux DevTools, Ahead-Of-Time (AoT) Compilation.
 
         \section{.NET}
+        Weshalb ASP.NET Core: Enterprise Framework, Kompilierbare Sprache (C\#), OS unabhängig.
         \textbf{Attribute}: intensiv eingesetzt (Um Konventionen zu übersteuern bzw zu unterstützen, Schnittstelle für Zusatzinformationen für Framework, Kann via "Reflection" ausgelesen werden).
         \begin{lstlisting}
           [Required]
@@ -814,12 +815,29 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         % Asseembly.GetEntryassembly().GetTypes() -> Findet alle Typen mit einem bestimmten Attribut
         % Activator.CreateInstance(typesWithAttribute.First()) -> Erzeugt eine Instanz von diesem Type
 
+        \textbf{Extension Methods}: C\# erlaubt es existierenden Klassen Methoden "hinzuzufügen"
+        \begin{lstlisting}
+          string s = "Hello Extension Methods";
+          int i = s.WordCount();
+
+          public static class MyExtensions
+          {
+            public static int WordCount(this string str) {
+              return str.Split(new char[] {' ', '.', '?'}).Length;
+            }
+          }
+        \end{lstlisting}
+
         \textbf{Async Await}
         \begin{lstlisting}
           static async Task Main(string[] args)
           {
+            Console.WriteLine("--");
             await RunAsync();
+            Console.WriteLine("--");
+            Console.ReadLine();
           }
+
           public static Task<string> Send()
           {
             return Task.Run(() => {
@@ -827,6 +845,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
               return "nachricht gesendet";
             });
           }
+
           public static async Task<bool> RunAsync()
           {
             Console.WriteLine("Start Send");
@@ -834,13 +853,42 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             Console.WriteLine("End Send");
             return true;
           }
-        \end{lstlisting}
-                  % outputs
+
+          % outputs
           % -- start send send! nachricht gesendet end send -- 
+        \end{lstlisting}
+        \textbf{Convention over configuration (or coding by convention)}: seeks to decreasse the numbere of decision that developers need to make, gaining simplicity, and not necessarily losing flexibility.
+        Nachteile: Magie, Ev. Schwer anzupassen (falls Anforderungen nciht inss Schema passen)
+        \textbf{Multi-Threading}: Besitzt Thread Pool wo grösse konfigurierbar. Wählt für jeden Request einen Thread aus Pool für bearbeitung.
+        Thread solange blockiert bis Request abgeschlossen (oder vorzeitig zurückgegeben -> async/await)
+        Keine geteilten Daten in Controller / Services halten (z.B. Static Variablen, ASP.NET instanziert für jeden Request neuen Controller)
         \textbf{MVVM} View: Markup Language, was Benutzer sieht, Kommunikation zu ViewModel via Bindings. View Model: Daten für View aufbereiten, Value Converter, UI Logik. Model: Daten, Services, Domain Logik
+        \textbf{Middlewaree}: Request durchläuft Stack von Middlewares, jede kann Request abbrechen (bsp: autorisierung, MVC, welcomepage..)
+        Vier verschiedene Arten Middleware zu registrieren; (neue Middleware registrieren, Verzweigung für Anfragepfad erzeugen, Request Terminieren, CustomMiddleware als Klasse aufrufen)
+        \begin{lstlisting}
+          app.Use(async (context, next) => {
+            await next.Invoke();
+          });
+          app.Map("/logging", builder => {
+            builder.Run(async (context) => {
+              await context.Response.WriteAsync("Hello There");
+            });
+          })
+          app.Run(async (context) => {
+            await context.Response.WriteAsync("dead ig");
+          });
+          app.UseMiddleware<RequestLoggerMiddlewaree()>;
+        \end{lstlisting}
+        \textbf{Dependency Injection}: Reduziert hohe Kopplung zwischen verschiedenen Klassen, Verbesserung Testbarkeit. ASP.NET kommt mit primitiven Dependency Injectoin Container.
+        Idee: Klasse erwähnt welche Interfaces benötigt werden, resolver sucht im Container nach Klasse und übergibt. Im Container wurden Interefaces mit konktreten Klassen regiistriert, falls keine vorhannden, Fehler geworfen.
         % doubt that we need to do sthm like this at exam... could still add thee registration if needed...
-        Dependency Injection - Lifetimes: Transient: created each time they are requested. Best for lightweeight, stateless services. Scoped: created once per request. Singelton: created the first time they are requested and then every subsequent request will use the same instance.
-        \textbf{Pages}:
+        DI - Lifetime: Transient: created each time they are requested. Best for lightweeight, stateless services. Scoped: created once per request. Singelton: created the first time they are requested and then every subsequent request will use the same instance.
+        \textbf{Projekt-Struktur}
+        wwwroot: statischen Inhalte der Webseite z.B. CSS/JS/HTML, keine sensitiven Daten
+        appsettings.json: Einstellungen der Webseite z.B. Coonnection-String zur DB
+        Programm.cs: Einstiegspunkt von der Web Applikation
+        Startup.cs: Konfiguriert die Web Applikation 
+        \textbf{Pages}: Geeignte für Web Applikationen mit "Page" Fokus (Alternative unnd vereinfachte Variantee vom MVC, Router muss nicht konfiguriert werden, Best-Practices for SSR)
         Routing: generiert anhand von URL Antwort, URL wird auf Aktion: "gemappt" (Routing-Module). Bei Aufruf im Folder "/pages/" nach Page gesucht und ausgeführt (default case insensitive)
         MVVM: Besteht aus 2 Files, *.cshtml (View mit Razor), *.cshtml.cs (Viewmodel)
         \begin{lstlisting}
@@ -872,7 +920,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             public string EchoText {get; set;}
           }
         \end{lstlisting}
-        View: @page definiert Razor-File als Page, @page "/test/{id?}" überschreibt Default-Routing Informationen
+        View: @paage definiert Razor-File als Page, @page "/test/{id?}" überschreibt Default-Routing Informationen
         kann auf verschiedene Arten zugegriffen werden:
         \begin{lstlisting}
           @page "/test/{id:int?}"
@@ -895,7 +943,13 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             }
           }
         \end{lstlisting}
-        % Razor: not sure if makes sense to add this default information here regarrding @RenderBody() and @RenderSecction("scripts", required: false)...
+        \textbf{Razor}: Wichtige Datein: Layout: Shared/\_layout.cshtml: definiert generelle Layout für APplikation, definiert Sectionns welche von Content Page abgefüllt werden.
+        Beinhaltet Struktur der Webseite, welche für jede Seite identisch sein sollte
+        % not sure if makes sense to add this default information here regarrding @RenderBody() and @RenderSecction("scripts", required: false)...
+
+        \_ViewStart.cshtml: Hierarchisch, beinhaltet Codee welcher vor den Razor Files ausgeeführt wird z.B. Layout für alle Pages
+        \_ViewImports.cshtml: Hierarchisch, Namespaces \& Tag-Helpers können in diesem File registriert werden
+
         \textbf{Tag Helpers}: Ermöglichen Code an HTML Tags zu binden
         \begin{lstlisting}
           <email mail-for="support@examl.com"></email>
@@ -912,9 +966,15 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             }
           }
         \end{lstlisting}
-        \textbf{AJAX Handlers:} Pages können weiter Actions als "handler" anbieten; Schema; On[Method][Name] z.B. OnPostEcho, aufgerufen via: [METHOD] /[PAGE]?handler=[HandlerName] -> GET /Ajax?handler=autocomplete
+        % lohnt es sich hier ein Beispiel zu definieren wie man es added?
+        Daten zwischen Razor-Datein: Daten im View Model übergeben, stehen nur in der zugehörigen View zur Verfügung. können als ViewData oder TempData gekennzeichnet werden.
+        TempData (überlebt eineen Redirect)
 
-        \textbf{Entity Framework (EF)}: objektrelationale Zuordung, die Entwickler über domänenspezifsche Objekte die Nutzung relationaler Daten ermöglicht. (wenig Code, viele Konvention, OR-Mapper).
+        \textbf{AJAX}
+        Handlers: Pages können weiter Actions als "handler" anbieten; Schema; On[Method][Name] z.B. OnPostEcho, aufgerufen via: [METHOD] /[PAGE]?handler=[HandlerName] -> GET /Ajax?handler=autocomplete
+        Erlaubte Rückgabewerte sind vom Type IActionResult (Bsp; ContentResult: JsonResult, Status: NotFoundResult, Redirects: RedirectToPage)
+
+        \textbf{Entity Framework (EF)}: objektrelationale Zuordung, die Entwickler über domänenspezifsche Objekte die Nutzung relationaler Daten ermöglicht. (wenig Code, viele Konvention, OR-Mapper). SQL-Rows auf Klasse mappen, Relationen auflöseen udn richtig setzen.
         Code First benötigt; type discovery: welche Klassen gehören in die DB, Connection String: Wohin mit Daten, DbContext: Entry Point
         \begin{lstlisting}
           public class Order
@@ -936,8 +996,19 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         % migrations explizit ausgelassen, kann aber hinzugefügt werden falls nötig..
         \textbf{Validation}: Client: JQuery Valdation, Server: ASPNET, z.B. Annotieren der Klasse z.B. [Required] oder [StringLength(60, MinimumLength=3)] (Sind kombinierbar), Razor anpassen (Validation ins DOM einfügen), Server Side validierung
 
-        \textbf{ASPNET identity features}:         
+        \textbf{ASPNET identity features}: nimmt probleme wie user validation oder passwort stärke ab (gibt Identity Klassen die via DI injected werden können z.B. UserManager oder RoleManager)
+        [Authorize] -> User muss authentifiziert sein (kann auf Controller/Pages definiert werden), [AllowAnonymous] -> erlaubt für spezifische Action anonymen Zugriff
+
+        this.User (Controller/Pages): Beinhaltet den eingeloggten User, Type is ClaimsPrincipal (Applicationuser)
+        Claim: Statement über User vom Identity Provider ausgestellt
+        Manuell authentifizerbar via User.Identity.isAuthenticated
         Autorisierung: via Attrbute [Authorize(Roles="Admin, PowerUser")] oder [Authorize(Policy="OlderThan18")] oder via Services z.B. await \_userManager.isInRoleAsync(user, "Admin")
+        Policies ermöglichen komplexere Regeln zu definieren
+        \begin{lstlisting}
+          options.AddPolicy("Founders", policy => {
+            policy.RequireClaim(ClaimTypes.Name, "foo.bar@ost.ch");
+          });
+        \end{lstlisting}
         % full part on testing and DB Mocking i left out, can be added if needed but doesn't seem as important as other things I'd say
 
         \textbf{API Routing}: Funktioniert über Attribute [Route] definieret einen neuen Eintag im Router, [HttpMethod] bei Actions ist required
@@ -946,7 +1017,22 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         % swagger configuration scheint auch nicht relevant / brauchbar zu sein
 
+        \textbf{REST Hateoas}: Idee: Verlinkte Daten als Links zur Verfügung stellen 
         % again here, wirkt mir ein zu spezifisch und zu viel Boilerplate das es relevant ist
+
+        \textbf{Exception Handling}: Error Handling soll generisch funktionieren -> Gibt Exception die notwendige Daten sammelt, globalen Errorhandler, welche Exception für Client aufbereitet, bei ungültigen Zustand wird Custom Exception ausgelöst.
+        ASP.NET MVC erlaubt es Filter zu definieren, welche für jede Action aufgerufen werden 
+        \begin{lstlisting}
+          services.AddMvc(options => {
+            options.Filters.Add(new ValidationModelAttribute());
+          }));
+
+          public class ValidateModelAttribute:ActionFilterAttribute{
+            public override void OnActionExecuting(ActionExecutingContext context) {
+              if (!context.ModelStatee.IsValid) throw new ServicExceptionType.ForbiddenByRule);}
+            }
+          }
+        \end{lstlisting}
         
         % what JWT is and what it does we know, doesn't seem to make sense to add it... same for the info "ony send tokenss via Https"
         % and that it can be activated via app.useHttpsRedirection()
