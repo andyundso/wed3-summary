@@ -2,7 +2,7 @@
 \usepackage{multicol}
 \usepackage{calc}
 \usepackage{ifthen}
-\usepackage[a4paper, landscape]{geometry}
+\usepackage[a4paper, portrait]{geometry}
 \usepackage{hyperref}
 
 \usepackage{graphicx}
@@ -25,8 +25,8 @@
 \ifthenelse{\lengthtest { \paperwidth = 11in}}
 { \geometry{top=.5in,left=.5in,right=.5in,bottom=.5in} }
 {\ifthenelse{ \lengthtest{ \paperwidth = 297mm}}
-{\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
-{\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
+{\geometry{top=0.25cm,left=0.25cm,right=0.25cm,bottom=0.25cm} }
+{\geometry{top=0.25cm,left=0.25cm,right=0.25cm,bottom=0.25cm} }
 }
 
 % Turn off header and footer
@@ -67,7 +67,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
     \raggedright
     \footnotesize
-    \begin{multicols}{3}
+    \begin{multicols}{2}
 
 
 % multicol parameters
