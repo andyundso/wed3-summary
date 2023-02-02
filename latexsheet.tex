@@ -699,9 +699,9 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         \begin{lstlisting}[belowskip=-0.8 \baselineskip]
         var subscription = this.http.get('api/samples').subscribe(
-            function (x) { /* onNext -> data received (in x) */ },
-            function (e) { /* onError -> the error (e) has been thrown */ },
-            function () { /* onCompleted -> the stream is closing down */ }
+            function (x) { /* onNext: data received (in x) */ },
+            function (e) { /* onError: the error (e) has been thrown */ },
+            function () { /* onCompleted: the stream is closing down */ }
         );
         \end{lstlisting}
 
@@ -812,8 +812,8 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           [HttpPost]
           public ActionResult About()
         \end{lstlisting}
-        % Asseembly.GetEntryassembly().GetTypes() -> Findet alle Typen mit einem bestimmten Attribut
-        % Activator.CreateInstance(typesWithAttribute.First()) -> Erzeugt eine Instanz von diesem Type
+        % Asseembly.GetEntryassembly().GetTypes(): Findet alle Typen mit einem bestimmten Attribut
+        % Activator.CreateInstance(typesWithAttribute.First()): Erzeugt eine Instanz von diesem Type
 
         \textbf{Extension Methods}: C\# erlaubt es existierenden Klassen Methoden "hinzuzufügen"
         \begin{lstlisting}
@@ -857,70 +857,147 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           % outputs
           % -- start send send! nachricht gesendet end send -- 
         \end{lstlisting}
+
         \textbf{Convention over configuration (or coding by convention)}: seeks to decreasse the numbere of decision that developers need to make, gaining simplicity, and not necessarily losing flexibility.
-        Nachteile: Magie, Ev. Schwer anzupassen (falls Anforderungen nciht inss Schema passen)
+        Nachteile: Magie, Ev. Schwer anzupassen (falls Anforderungen nicht ins Schema passen)
+
         \textbf{Multi-Threading}: Besitzt Thread Pool wo grösse konfigurierbar. Wählt für jeden Request einen Thread aus Pool für bearbeitung.
-        Thread solange blockiert bis Request abgeschlossen (oder vorzeitig zurückgegeben -> async/await)
+        Thread solange blockiert bis Request abgeschlossen (oder vorzeitig zurückgegeben: async/await)
         Keine geteilten Daten in Controller / Services halten (z.B. Static Variablen, ASP.NET instanziert für jeden Request neuen Controller)
-        \textbf{MVVM} View: Markup Language, was Benutzer sieht, Kommunikation zu ViewModel via Bindings. View Model: Daten für View aufbereiten, Value Converter, UI Logik. Model: Daten, Services, Domain Logik
-        \textbf{Middlewaree}: Request durchläuft Stack von Middlewares, jede kann Request abbrechen (bsp: autorisierung, MVC, welcomepage..)
+
+        \textbf{MVVM} View: Markup Language, was Benutzer sieht, Kommunikation zu ViewModel via Bindings.
+        View Model: Daten für View aufbereiten, Value Converter, UI Logik. Model: Daten, Services, Domain Logik.
+        Nur Daten an die View ausliefern, die wirklich revelant sind.
+
+        \textbf{Middleware}: Request durchläuft Stack von Middlewares, jede kann Request abbrechen (bsp: autorisierung, MVC, welcomepage..)
         Vier verschiedene Arten Middleware zu registrieren; (neue Middleware registrieren, Verzweigung für Anfragepfad erzeugen, Request Terminieren, CustomMiddleware als Klasse aufrufen)
+
         \begin{lstlisting}
-          app.Use(async (context, next) => {
-            await next.Invoke();
+        # Registiert eine neue Middleware
+        app.Use(async (context, next) => {
+          await next.Invoke();
+        });
+
+        # Erzeugt eine Verzweigung
+        app.Map("/logging", builder => {
+          builder.Run(async (context) => {
+            await context.Response.WriteAsync("Hello There");
           });
-          app.Map("/logging", builder => {
-            builder.Run(async (context) => {
-              await context.Response.WriteAsync("Hello There");
-            });
-          })
-          app.Run(async (context) => {
-            await context.Response.WriteAsync("dead ig");
-          });
-          app.UseMiddleware<RequestLoggerMiddlewaree()>;
+        })
+
+        # Terminiert den Request
+        app.Run(async (context) => {
+          await context.Response.WriteAsync("dead ig");
+        });
+
+        # Registierung als Klasse
+        app.UseMiddleware<RequestLoggerMiddleware()>;
+
+        public class RequestLoggerMiddleware {
+          private readonly RequestDelegate _next;
+          private readonly ILogger _logger;
+          public RequestLoggerMiddleware(RequestDelegate next, ILoggerFactory loggerFactory) {
+            _next = next;
+            _logger = loggerFactory.CreateLogger < RequestLoggerMiddleware > ();
+          }
+          public async Task Invoke(HttpContext context) {
+            _logger.LogInformation("Handling request: " + context.Request.Path);
+            await _next.Invoke(context);
+            _logger.LogInformation("Finished handling request.");
+          }
+        }
         \end{lstlisting}
-        \textbf{Dependency Injection}: Reduziert hohe Kopplung zwischen verschiedenen Klassen, Verbesserung Testbarkeit. ASP.NET kommt mit primitiven Dependency Injectoin Container.
-        Idee: Klasse erwähnt welche Interfaces benötigt werden, resolver sucht im Container nach Klasse und übergibt. Im Container wurden Interefaces mit konktreten Klassen regiistriert, falls keine vorhannden, Fehler geworfen.
-        % doubt that we need to do sthm like this at exam... could still add thee registration if needed...
-        DI - Lifetime: Transient: created each time they are requested. Best for lightweeight, stateless services. Scoped: created once per request. Singelton: created the first time they are requested and then every subsequent request will use the same instance.
+
+        \textbf{Dependency Injection}: Reduziert hohe Kopplung zwischen verschiedenen Klassen, Verbesserung Testbarkeit. ASP.NET kommt mit primitiven Dependency Injection Container.
+        Idee: Klasse erwähnt, welche Interfaces benötigt werden, resolver sucht im Container nach Klasse und übergibt. Im Container wurden Interfaces mit konktreten Klassen regiistriert, falls keine vorhannden, Fehler geworfen.
+
+        \begin{lstlisting}
+        public class Startup {
+          // This method gets called by the runtime. Use this method to add services to the container.
+          public void ConfigureServices(IServiceCollection services) {
+            services.AddTransient <IUserService, UserService> ();
+            //services.AddTransient<IUserService, FakeUserService>();
+          }
+          // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+          public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory) {
+            app.UseMiddleware < UserMiddleware > ();
+          }
+        }
+        \end{lstlisting}
+
+        DI - Lifetime: Transient: created each time they are requested. Best for lightweeight, stateless services. Scoped: created once per request. Singleton: created the first time they are requested and then every subsequent request will use the same instance.
+        \textbf{Captive Dependency}: Wenn Singleton Scoped Service verwendet, wird Scope Service nur einmal erzeugt, kann Probleme verursachen.
+
         \textbf{Projekt-Struktur}
         wwwroot: statischen Inhalte der Webseite z.B. CSS/JS/HTML, keine sensitiven Daten
-        appsettings.json: Einstellungen der Webseite z.B. Coonnection-String zur DB
+        appsettings.json: Einstellungen der Webseite z.B. Connection-String zur DB
         Programm.cs: Einstiegspunkt von der Web Applikation
-        Startup.cs: Konfiguriert die Web Applikation 
-        \textbf{Pages}: Geeignte für Web Applikationen mit "Page" Fokus (Alternative unnd vereinfachte Variantee vom MVC, Router muss nicht konfiguriert werden, Best-Practices for SSR)
+        Startup.cs: Konfiguriert die Web Applikation.
+
+        Nur nötige Endpoints und Services registrieren.
+
+        \begin{lstlisting}
+        builder.Services.AddControllers();
+        builder.Services.AddRazorPages();
+        builder.Services.AddControllersWithViews();
+        builder.Services.AddMvc();
+        \end{lstlisting}
+
+        \textbf{Pages}: Geeignte für Web Applikationen mit "Page" Fokus (Alternative und vereinfachte Variante vom MVC, Router muss nicht konfiguriert werden, Best-Practices for SSR)
         Routing: generiert anhand von URL Antwort, URL wird auf Aktion: "gemappt" (Routing-Module). Bei Aufruf im Folder "/pages/" nach Page gesucht und ausgeführt (default case insensitive)
         MVVM: Besteht aus 2 Files, *.cshtml (View mit Razor), *.cshtml.cs (Viewmodel)
         \begin{lstlisting}
-          @page
-          @model HelloWorldModel
-          @{
-            ViewData["Title"] = "HelloWorld";
-          }
+        @page
+        @model PostModel
+        @{
+            ViewData["Title"] = "Post";
+        }
 
-          <h1>@Model.HelloWorld</h1>
+        <form asp-page="Post">
+            <input name="echoText" placeholder="Echo-Text" />
+            <input name="times" type="number" placeholder="Anzahl" />
+            <button type="submit">Send</button>
+        </form>
 
-          public class HelloWorldModel : PageModel
-          {
-            public string HelloWorld {get;set;}
+        @if (Model.Times > 0)
+        {
+            for (var i = 0; i < Model.Times; i++)
+            {
+                <span>@Model.EchoText</span>
+            }
+        }
+
+        public class PostModel : PageModel
+        {
+            public string EchoText { get; set; }
+            public long Times { get; set; }
             public void OnGet()
             {
-              HelloWorld = "Hi World!";
+
+            }   
+
+            public void OnPost(string echoText, long times)
+            {
+                EchoText = echoText;
+                Times = times;            
             }
-          }
-        \end{lstlisting}
-        @model: Beschreibt Type vom View Model dieser Seite, wird in Var Model abgelegt
-        PageModel: Basis Klassse mit Hilfsfunktionen (Redirects / Event-Hooks), Aufbereitung der Daten für die View
-        MVVM - Model: kann pro HTTP-Verb eine Funktion definieren die davor aufgerufen wird (OnGet, OnPost), Body und Query werden automatisch gemappt, Parameter werden als Argumente übergeben, können auch alss Klasse entgegen genommen werden.
-        Mit [BindProperty] kann auf das Kopieren von Properties verzichtet werden, nutzen falls Properties 1:1 der View übergegebn werden [BindProperty(SupportsGet = true)]
-        \begin{lstlisting}
-          public class PostModel : PageModel
-          {
+        }
+
+
+        public class PostModel2 : PageModel
+        {
             [BindProperty]
-            public string EchoText {get; set;}
-          }
+            public string EchoText { get; set; }
+
+            [BindProperty]
+            public long Times { get; set; }
+        }
         \end{lstlisting}
-        View: @paage definiert Razor-File als Page, @page "/test/{id?}" überschreibt Default-Routing Informationen
+        \lstinline{@model}: Beschreibt Type vom View Model dieser Seite, wird in Var Model abgelegt
+        PageModel: Basis-Klasse mit Hilfsfunktionen (Redirects / Event-Hooks), Aufbereitung der Daten für die View
+        MVVM - Model: kann pro HTTP-Verb eine Funktion definieren die davor aufgerufen wird (\lstinline{OnGet}, \lstinline{OnPost}), Body und Query werden automatisch gemappt, Parameter werden als Argumente übergeben, können auch als Klasse entgegen genommen werden.
+        Mit [BindProperty] kann auf das Kopieren von Properties verzichtet werden, nutzen falls Properties 1:1 der View übergeben werden \lstinline{[BindProperty(SupportsGet = true)]}
+        View: @page definiert Razor-File als Page, @page "/test/{id?}" überschreibt Default-Routing Informationen
         kann auf verschiedene Arten zugegriffen werden:
         \begin{lstlisting}
           @page "/test/{id:int?}"
@@ -931,7 +1008,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           <h1>Routing</h1>
           @RouteData.Values["id"]
 
-          public class RoutignModel : PageModel
+          public class RoutingModel : PageModel
           {
             public int Id {get;set;}
             [BindProperty(SupportsGet = true, Name="Id")]
@@ -943,11 +1020,25 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             }
           }
         \end{lstlisting}
-        \textbf{Razor}: Wichtige Datein: Layout: Shared/\_layout.cshtml: definiert generelle Layout für APplikation, definiert Sectionns welche von Content Page abgefüllt werden.
-        Beinhaltet Struktur der Webseite, welche für jede Seite identisch sein sollte
-        % not sure if makes sense to add this default information here regarrding @RenderBody() and @RenderSecction("scripts", required: false)...
 
-        \_ViewStart.cshtml: Hierarchisch, beinhaltet Codee welcher vor den Razor Files ausgeeführt wird z.B. Layout für alle Pages
+        \textbf{Razor}: Wichtige Dateien: Layout: Shared/\_layout.cshtml: definiert generelle Layout für Applikation, definiert Sections, welche von Content Page abgefüllt werden.
+        Beinhaltet Struktur der Webseite, welche für jede Seite identisch sein sollte.
+
+        \begin{lstlisting}
+        <div class="container">
+            @RenderBody()
+        </div>
+
+        <div class="container">
+            <a class="navbar-brand" asp-area="" asp-page="/Index">Home</a> @RenderSection("Nav", false)
+        </div>
+
+        @section Nav{
+            <a class="navbar-brand" asp-area="" asp-page="./ViewData">ViewData</a> <a class="navbar-brand" asp-area="" asp-page="./TempData">TempData</a>
+        }
+        \end{lstlisting}
+
+        \_ViewStart.cshtml: Hierarchisch, beinhaltet Codee welcher vor den Razor Files ausgeführt wird z.B. Layout für alle Pages
         \_ViewImports.cshtml: Hierarchisch, Namespaces \& Tag-Helpers können in diesem File registriert werden
 
         \textbf{Tag Helpers}: Ermöglichen Code an HTML Tags zu binden
@@ -965,17 +1056,69 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
               output.Content.SetContent(MailFor);
             }
           }
+
+        # dann im ViewImports.cshtml
+        @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+        @addTagHelper *, DataBinding
         \end{lstlisting}
-        % lohnt es sich hier ein Beispiel zu definieren wie man es added?
-        Daten zwischen Razor-Datein: Daten im View Model übergeben, stehen nur in der zugehörigen View zur Verfügung. können als ViewData oder TempData gekennzeichnet werden.
-        TempData (überlebt eineen Redirect)
+
+        Daten zwischen Razor-Dateien: Daten im View Model übergeben, stehen nur in der zugehörigen View zur Verfügung.
+        Können als ViewData oder TempData gekennzeichnet werden (mit \lstinline{[TempData]} oder \lstinline{[ViewData]} auf Property).
+        TempData (überlebt einen Redirect)
 
         \textbf{AJAX}
-        Handlers: Pages können weiter Actions als "handler" anbieten; Schema; On[Method][Name] z.B. OnPostEcho, aufgerufen via: [METHOD] /[PAGE]?handler=[HandlerName] -> GET /Ajax?handler=autocomplete
+        Handlers: Pages können weiter Actions als "handler" anbieten; Schema; On[Method][Name] z.B. OnPostEcho, aufgerufen via: [METHOD] /[PAGE]?handler=[HandlerName]: GET /Ajax?handler=autocomplete
         Erlaubte Rückgabewerte sind vom Type IActionResult (Bsp; ContentResult: JsonResult, Status: NotFoundResult, Redirects: RedirectToPage)
 
-        \textbf{Entity Framework (EF)}: objektrelationale Zuordung, die Entwickler über domänenspezifsche Objekte die Nutzung relationaler Daten ermöglicht. (wenig Code, viele Konvention, OR-Mapper). SQL-Rows auf Klasse mappen, Relationen auflöseen udn richtig setzen.
+        \begin{lstlisting}
+        @page
+        @{
+            ViewData["Title"] = "AjaxAutocomplete";
+        }
+
+        <input id="city" list="cities-list" />
+        <datalist id="cities-list"></datalist>
+
+        @section Scripts{
+            <script>
+                const list = document.getElementById("cities-list");
+
+                document.getElementById("city").addEventListener("input",
+                    async (args) => {
+                        var url = new URL("./Ajax/Ajax", window.location.origin);
+                        var params = { handler: "Autocomplete", text: args.target.value }
+                        url.search = new URLSearchParams(params);
+
+                        const result = await fetch(url, { method: "get" });
+                        list.innerHTML = (await result.json()).map(x => `<option>${x}</option>`);
+                    });
+            </script>
+        }
+
+        public class AjaxModel : PageModel
+        {
+            private readonly CitiesService _citiesService;
+
+            public AjaxModel(CitiesService citiesService)
+            {
+                _citiesService = citiesService;
+            }
+            public void OnGet()
+            {
+                throw new NotSupportedException();
+            }
+
+            public IActionResult OnGetAutocomplete(string text)
+            {
+                return new JsonResult(_citiesService.GetCities(text));
+            }
+        }
+        \end{lstlisting}
+
+        \textbf{Entity Framework (EF)}: objektrelationale Zuordung, die Entwickler über domänenspezifsche Objekte die Nutzung relationaler Daten ermöglicht. (wenig Code, viele Konvention, OR-Mapper). SQL-Rows auf Klasse mappen, Relationen auflöseen und richtig setzen.
         Code First benötigt; type discovery: welche Klassen gehören in die DB, Connection String: Wohin mit Daten, DbContext: Entry Point
+        Konfiguration im \lstinline{Startup.cs}, Connection String dann im \lstinline{appsettings.json}.
+
         \begin{lstlisting}
           public class Order
           {
@@ -989,38 +1132,103 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             }
           }
         \end{lstlisting}
-        public [long/string] Id -> automatisch Primary key von Entity
-        public virtual ApplicationUser Customer -> automatisch als Navigation Properety erkannt (CustomerId -> wird als Foreign Key für Customer Property erkannt)
-        [Required] -> NotNull, [NotMapped] -> nicht in DB geschrieben, [Key] -> Definiert Primary Key der Entity, [MaxLength(10)] -> Beeinflusst die Allokatingrösse des Feldes in DB
+
+        \lstinline{public [long/string] Id}: automatisch Primary key von Entity
+        \lstinline{public virtual ApplicationUser Customer}: automatisch als Navigation Property erkannt (CustomerId: wird als Foreign Key für Customer Property erkannt)
+        \lstinline{[Required]}: NotNull, \lstinline{[NotMapped]}: nicht in DB geschrieben, \lstinline{[Key]}: Definiert Primary Key der Entity, \lstinline{[MaxLength(10)]}: Beeinflusst die Grösse des Feldes in DB
 
         % migrations explizit ausgelassen, kann aber hinzugefügt werden falls nötig..
-        \textbf{Validation}: Client: JQuery Valdation, Server: ASPNET, z.B. Annotieren der Klasse z.B. [Required] oder [StringLength(60, MinimumLength=3)] (Sind kombinierbar), Razor anpassen (Validation ins DOM einfügen), Server Side validierung
+        \textbf{Validation}: Client: JQuery Validation, Server: ASPNET, z.B. Annotieren der Klasse z.B. [Required] oder [StringLength(60, MinimumLength=3)] (Sind kombinierbar), Razor anpassen (Validation ins DOM einfügen), Server Side validierung
 
-        \textbf{ASPNET identity features}: nimmt probleme wie user validation oder passwort stärke ab (gibt Identity Klassen die via DI injected werden können z.B. UserManager oder RoleManager)
-        [Authorize] -> User muss authentifiziert sein (kann auf Controller/Pages definiert werden), [AllowAnonymous] -> erlaubt für spezifische Action anonymen Zugriff
+        \begin{lstlisting}
+        [HttpPost]
+        public ActionResult Index(Order order) {
+            if (ModelState.IsValid)
+            {
+                order.CustomerId = User.Identity.GetUserId();
+                _db.Orders.Add(order);
+                _db.SaveChanges();
+                return View("OrderOk", order);
+            }
+            return BadRequest();
+        }
+        \end{lstlisting}
 
-        this.User (Controller/Pages): Beinhaltet den eingeloggten User, Type is ClaimsPrincipal (Applicationuser)
-        Claim: Statement über User vom Identity Provider ausgestellt
-        Manuell authentifizerbar via User.Identity.isAuthenticated
-        Autorisierung: via Attrbute [Authorize(Roles="Admin, PowerUser")] oder [Authorize(Policy="OlderThan18")] oder via Services z.B. await \_userManager.isInRoleAsync(user, "Admin")
-        Policies ermöglichen komplexere Regeln zu definieren
+        \textbf{ASPNET identity features}: nimmt probleme wie user validation oder passwort stärke ab (gibt Identity Klassen die via DI injected werden können z.B. UserManager oder RoleManager).
+        Aktivierung mit Middle \lstinline{app.UseIdentity();}.
+
+        \begin{lstlisting}
+        services.AddDefaultIdentity<IdentityUser> (options => {
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 4;
+          })
+          .AddRoles < IdentityRole > ().AddEntityFrameworkStores < ApplicationDbContext > ();
+        \end{lstlisting}
+
+        \lstinline{[Authorize]}: User muss authentifiziert sein (kann auf Controller/Pages definiert werden), \lstinline{[AllowAnonymous]}: erlaubt für spezifische Action anonymen Zugriff
+
+        \lstinline{this.User} (Controller/Pages): Beinhaltet den eingeloggten User, Type is ClaimsPrincipal (Applicationuser)
+        Claim: Statement über User, vom Identity Provider ausgestellt
+        Manuell authentifizierbar via \lstinline{User.Identity.isAuthenticated}
+        Autorisierung: via Attribute \lstinline{[Authorize(Roles="Admin, PowerUser")]} oder \lstinline{[Authorize(Policy="OlderThan18")]} oder via Services z.B. \lstinline{await userManager.isInRoleAsync(user, "Admin")}.
+        Policies ermöglichen, komplexere Regeln zu definieren.
+
         \begin{lstlisting}
           options.AddPolicy("Founders", policy => {
             policy.RequireClaim(ClaimTypes.Name, "foo.bar@ost.ch");
           });
         \end{lstlisting}
-        % full part on testing and DB Mocking i left out, can be added if needed but doesn't seem as important as other things I'd say
+
+        \textbf{Unit testing}: Verschiedene Frameworks, xunit in diesem Kurs.
+        \lstinline{[Fact]}-Attribut kennzeichnet eine Test-Methode.
+
+        \begin{lstlisting}
+        [Fact]
+        public async void CreateFailing() {
+          AddModel model = new AddModel(null);
+          model.Order = new NewOrderViewModel();
+          ValidateModel(model.Order, model);
+          Assert.NotNull(await model.OnPostAsync());
+        }
+        private static void ValidateModel(object model, AddModel page) {
+          var context = new ValidationContext(model);
+          var validationResults = new List < ValidationResult > ();
+          Validator.TryValidateObject(model, context, validationResults, true);
+          foreach(var validationResult in validationResults) {
+            page.ModelState.AddModelError("CustomError", validationResult.ErrorMessage);
+          }
+        }
+        \end{lstlisting}
 
         \textbf{API Routing}: Funktioniert über Attribute [Route] definieret einen neuen Eintag im Router, [HttpMethod] bei Actions ist required
-        [Route("api/[controller]")] -> Klassen def -> [HttpGet] public IEnumerable<Value> Get()  oder [HttpGet("{id}")] public Value Get(int id)
-        % mehr Beispiel needed? 
+        \lstinline{[Route("api/[controller]")]}: Klassen def: [HttpGet] public IEnumerable<Value> Get()  oder [HttpGet("{id}")] public Value Get(int id)
 
+        \begin{lstlisting}
+        [Route("api/[controller]")]
+        public class ValuesController: Controller {
+          [HttpGet]
+          public IEnumerable < Value > Get() {
+              return _valueService.All();
+            }
+            [HttpGet("{id}")]
+            public Value Get(int id) {
+              return _valueService.Get(id);;
+            }
+            [HttpPost]
+            public void Post([FromBody] Value value) {
+              _valueService.Add(value);
+            }
+            ...
+        }
+        \end{lstlisting}
         % swagger configuration scheint auch nicht relevant / brauchbar zu sein
 
         \textbf{REST Hateoas}: Idee: Verlinkte Daten als Links zur Verfügung stellen 
         % again here, wirkt mir ein zu spezifisch und zu viel Boilerplate das es relevant ist
 
-        \textbf{Exception Handling}: Error Handling soll generisch funktionieren -> Gibt Exception die notwendige Daten sammelt, globalen Errorhandler, welche Exception für Client aufbereitet, bei ungültigen Zustand wird Custom Exception ausgelöst.
+        \textbf{Exception Handling}: Error Handling soll generisch funktionieren: Gibt Exception, welche die notwendige Daten sammelt, globalen Errorhandler, welche Exception für Client aufbereitet, bei ungültigen Zustand wird Custom Exception ausgelöst.
         ASP.NET MVC erlaubt es Filter zu definieren, welche für jede Action aufgerufen werden 
         \begin{lstlisting}
           services.AddMvc(options => {
@@ -1050,7 +1258,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         Investition lohnt sich, anscheinend gute Conversion Rate.
         Alternative: Native Applikation, lohnt sich eventuell nicht, da Nutzer nicht viel zwischen Apps hin- und herspringen.
 
-        Eigenschaften PWA: \texbf{Safe}: Muss über HTTPS ausgeliefert werden.
+        Eigenschaften PWA: \textbf{Safe}: Muss über HTTPS ausgeliefert werden.
         \textbf{Responsive}: Das UI soll für alle Grössen passen.
         \textbf{Progressive}: Die neuen API’s nutzen, um die bestmögliche UX zu erreichen, ohne die älteren Browser zu ignorieren.
         \textbf{Linkable}: Teilen von Inhalten ohne das der Sharing-Partner eine App installieren muss.
