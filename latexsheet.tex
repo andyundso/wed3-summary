@@ -1038,5 +1038,31 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         % and that it can be activated via app.useHttpsRedirection()
       
         % integration tests also seem "irrelevant" but nice to know ig...
+
+        \section{PWA}
+
+        \textbf{Firebase}: Tools von Google zur Realisierung einer PWA (aja Hr. Gfeller).
+        \textbf{Firestore}: No-SQL Datenbank, Kollektionen beinhalten Dokumente beinhalten beliebige Felder.
+        \textbf{Angularfire}: Wrapper für Firebase SDK, bietet Dependency injection, Observable based, Router Guards.
+        \textbf{Cypress}: E2E testing, gibt für Angular ein Schematic-Paket, bei React muss manuell verhängt werden.
+
+        Progressive Web App selber: Web-Applikation, die sich anfühlt wie eine native Applikation.
+        Investition lohnt sich, anscheinend gute Conversion Rate.
+        Alternative: Native Applikation, lohnt sich eventuell nicht, da Nutzer nicht viel zwischen Apps hin- und herspringen.
+
+        Eigenschaften PWA: \texbf{Safe}: Muss über HTTPS ausgeliefert werden.
+        \textbf{Responsive}: Das UI soll für alle Grössen passen.
+        \textbf{Progressive}: Die neuen API’s nutzen, um die bestmögliche UX zu erreichen, ohne die älteren Browser zu ignorieren.
+        \textbf{Linkable}: Teilen von Inhalten ohne das der Sharing-Partner eine App installieren muss.
+        \textbf{Discoverable}: Die Webseite soll über Suchmaschinen auffindbar sein.
+        \textbf{Installable}: Die Web Applikation mit Icon auf den Startbildschirm speichern (Web App Manifest).
+        \textbf{Network independent}: Die App soll auch mit schlechter, langsamer oder sogar gar keiner Verbindung funktionieren.
+        \textbf{Re-engageable}: Es soll möglich sein das die Verbindung zum Benutzer der Seite wieder aufgenommen werden, obwohl der Benutzer die Seite nicht geöffnet hat (Service Workers, Push-API).
+
+        PWA-Installation kann mittels JavaScript gemacht werden.
+
+        Im Manifest kann angegeben werden, dass PWA in einem Standalone-Fenster gestartet wird.
+        Nachteil, browserspezifische Features gehen verloren (wie z.B. Zurück-Button).
+        Feature muss nachgebaut werden, Anzeige kann mittels CSS-Media-Query \lstinline{display-mode} gesteuert werden (\lstinline{fullscreen} (Kiosk-Mode), \lstinline{standalone}, \lstinline{minimal-ui} (bietet minimale Navigationsfeatures), \lstinline{browser}).
     \end{multicols}
 \end{document}
