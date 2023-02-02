@@ -15,7 +15,8 @@
     prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
     tabsize=2,
     gobble=8,
-    frame=single
+    frame=single,
+    literate={\ \ }{{\ }}1
 }
 
 % This sets page margins to .5 inch if using letter paper, and to 1cm
@@ -373,7 +374,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         Asynchrone Actions:
 
-        \begin{lstlisting}
+        \begin{lstlisting}[belowskip=-0.8 \baselineskip]
         // First, create the thunk
         export const transferAsync = createAsyncThunk(
           "balance/transferApiRequest",
@@ -672,7 +673,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         \textbf{Component Transclusion / Content Projection}: Selbiges wie Reacts \lstinline{props.children}.
 
-        \begin{lstlisting}
+        \begin{lstlisting}[belowskip=-0.8 \baselineskip]
         <wed-navigation>
             <h1 wed-title>WED3 Lecture</h1>
             <menu><!-- ... --></menu>
@@ -696,9 +697,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         </wed-navigation>
         \end{lstlisting}
 
-
-
-        \begin{lstlisting}
+        \begin{lstlisting}[belowskip=-0.8 \baselineskip]
         var subscription = this.http.get('api/samples').subscribe(
             function (x) { /* onNext -> data received (in x) */ },
             function (e) { /* onError -> the error (e) has been thrown */ },
@@ -739,6 +738,68 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
          \end{lstlisting}
 
         \includegraphics[width=\linewidth]{angular_routing}
+
+        \textbf{Angular-Architekturen}: Flow architekturmässig dasselbe wie Redux.
+        Redux-Anbindung mittels \lstinline{ngxs} oder \lstinline{ngrx}.
+
+        \includegraphics[width=\linewidth]{angular_architecture_big_picture}
+
+        Vorteile ngrx: Einfaches Debugging, Undo/Redo einfache Implementation, weniger Code in Komponenten, weniger Change Detection Overhead.
+        Nachteile: Komplexere Architektur, Datenlogik fragmentiert in Reducer / Effects, zusätzliche Bibliothek.
+
+        \includegraphics[width=\linewidth]{angular_ngrx_architecture}
+
+        \textbf{MVC+S}: Daten-basierte Logik gekapselt in Services mittels RxJS.
+        \lstinline{BehaviorSubject} sendet ersten State bei Aufruf (normales Subject erst beim ersten Change, UI würde leer bleiben).
+        Sollte nicht public gemacht werden, ansonsten können Clients \lstinline{next()} aufrufen.
+
+        \begin{lstlisting}
+        @Injectable({ providedIn: 'root' })
+        export class SampleService {
+            private samples: BehaviorSubject<SampleModel[]> = new BehaviorSubject([]); // Event bus which is used to store the last state and to notify subscribers about updates.
+            public samples$: Observable<SampleModel[]> = this.samples.asObservable(); // Convert event bus into an observable, which can be provided to the UI or other services.
+
+            constructor(
+                private resourceService: SampleResourceService { }
+            )
+
+            public addSample(newSample: SampleModel): Observable<any> {
+                return this.resourceService
+                    .post(newSample)
+                    .pipe(
+                        tap(res => {
+                            this.samples.next([...this.samples.getValue(), newSample]); //  Store the retrieved data into the BehaviorSubject and emit the data changed event. Create a new array, otherwise the pipe cannot track the change.
+                        }),
+                        catchError((err) => this.handleError(err)));
+            }
+        }
+        \end{lstlisting}
+
+        \textbf{Pipe}: Hilfreich für kleine Transformationen, erlauben Parameter (\lstinline!<p>{{counter.date | date:'longDate'}}</p>!). Pure Pipes werden nur ausgeführt bei Änderungen am Subjekt, impure laufen bei jeder Change Detection.
+        Vorgefertige Pipes: \lstinline{async}, \lstinline{number}, \lstinline{date}, \lstinline{percent}.
+        Async erlaubt direkte Anzeige ab Observable (\lstinline!<li *ngFor="let s of sampleService.samples$ | async">!)
+        Filtering und Ordering Pipes gibt es nicht, gelten als Impure, sollte im Komponent gemacht werden.
+
+        \begin{lstlisting}
+        @Pipe({ name: 'logo', pure: true })
+        export class LogoPipe implements PipeTransform {
+            private logos = { /*...*/ };
+
+            transform(value?: string, transformSettings?: string): string {
+                if (value && transformSettings && this.logos[value]) {
+                    return (this.logos[value][transformSettings] || this.logos[value]['unspec']);
+                }
+                return value;
+            }
+        }
+        \end{lstlisting}
+
+        \textbf{Styling}: Styling standardmässig nur auf aktuellen Komponent \lstinline{Emulate}, kann mit \lstinline{encapsulation} kontrolliert werden, \lstinline{Native} verwendet Shadow DOM von Browser, \lstinline{None} fügt alle Styles global zusammen.
+        Spezial-Sachen: \lstinline{:host}: Zeigt auf das aktuelle Element.
+        \lstinline{host-context}: Sucht Vorgänger ab (\lstinline!:host-context(.theme-light) h2 { }!)
+        Drei Wege für Styling: \lstinline{styles}-Array auf Komponent, \lstinline{styleUrls}-Array auf Komponent, zeigt auf (S)CSS-Dateien, \lstinline{template} auf Komponent direkt.
+
+        \textbf{Angular-Tooling}: Angular State Inspector, Redux DevTools, Ahead-Of-Time (AoT) Compilation.
 
         \section{.NET}
         \textbf{Attribute}: intensiv eingesetzt (Um Konventionen zu übersteuern bzw zu unterstützen, Schnittstelle für Zusatzinformationen für Framework, Kann via "Reflection" ausgelesen werden).
