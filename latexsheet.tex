@@ -22,7 +22,7 @@
     literate={\ \ }{{\ }}1,
     commentstyle=\color{greencomments},
     keywordstyle=\color{blue},
-    ndkeywordstyle=\color{darkgray}\bfseries,
+    ndkeywordstyle=\color{darkgray},
     stringstyle=\color{red},
     identifierstyle=\color{black},
 }
@@ -42,7 +42,7 @@
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
 \lstdefinelanguage{JavaScript}{
-    keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break, @Injectable, @NgModule, @Component, constructor, public, private, @Pipe, const, var, let},
+    keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break, @Injectable, @NgModule, @Component, constructor, public, private, @Pipe, const, var, let, async, await},
     ndkeywords={class, export, boolean, throw, implements, import, this},
     sensitive=false,
     comment=[l]{//},
@@ -116,7 +116,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \section{SPA-Überblick}
 
         \textbf{Historisch}: 1990 nur statische Seiten, ab 1995 wenig JavaScript in Seiten.
-        2005 Erfindung von Asynchronous JavaScript and XML, 2014 Release von HTML spezifisch for SPA.
+        2005 Erfindung von Asynchronous JavaScript and XML (AJAX), 2014 Release von HTML5 spezifisch for SPA.
         2015 Google pusht PWA (Benachrichtungen, Service Workers, Web App Manifests).
 
         Browser werden immer mächtiger: Kamera-Zugriff, Bluetooth, Gaming Devices etc. können angesteuert werden.
@@ -135,7 +135,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \includegraphics[width=\linewidth]{spa_logical_overview}
 
         \textbf{Bundeling}: Gesamter JavaScript-Code muss über tendenziell langsame Leitung zu Kunden, bundling und minifying reduziert Grösse, grosse SPAs brauchen vernünftiges Dependency Management, Module können auch On-Demand geladen werden, Bundler kommen und gehen (z.B. Webpack, Grunt, Rollup, esbuild)
-        Webpack:
+        Webpack Konfiguration:
 
         \begin{itemize}
             \item Entry: Startpunkt wo Webpack mit Bundling beginnt und Dependencies findet.
@@ -145,9 +145,9 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             \item Mode: Aktivierung bestimmter Optimierungstechniken nach Bedarf.
         \end{itemize}
 
-        \textbf{Routing}: Wird in SPAs komplett client-seitig gemacht, Browser "fakt" URL-Änderungen, Content muss für Zurück-Button persistiert werden.
+        \textbf{Routing}: Wird in SPAs komplett client-seitig gemacht, Browser "faket" URL-Änderungen, Content muss für Zurück-Button persistiert werden.
         Früher gelöst mittels \#, heute mit \lstinline{window.history} / \lstinline{window.history.pushState}, verhindert das der Browser die URL wirklich lädt.
-        Meistens gelöst über eine Routing-Tabelle, welche je nach verlangter Route eine andere Funktion aufruft.
+        Intern in SPA gelöst über eine Routing-Tabelle, welche je nach verlangter Route eine andere Funktion aufruft.
 
         \textbf{Dependency Injection}: Reduziert Kopplung zwischen Konsument und Implementation, "Verträge" zwischen Klassen basieren auf Interfaces, erlaubt flexible Ersetzung einer konkreten Implementieren.
 
@@ -274,8 +274,8 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         \textbf{Routing}: Mittels React Router (Kollektion von Navigationskomponenten für React, für Web und Native).
         Alle Router müssen Teil von \lstinline{<BrowserRouter>} sein.
-        \lstinline[mathescape]!<Route path="/about" element ={<About/>} />!: Component About wird nur gerendert, wenn der path matcht.
-        App-interne Links verwenden nicht <a> sondern <Link>. \lstinline[mathescape]!<Link to="/about">About</Link>!
+        \lstinline[mathescape]!<Route path="/about" element ={<About/>} />!: Component \lstinline{About} wird nur gerendert, wenn der path matcht.
+        App-interne Links verwenden nicht \lstinline{<a>} sondern \lstinline{<Link>}. \lstinline[mathescape]!<Link to="/about">About</Link>!
 
         \textbf{Type-Checking}: Flow erweitert JavaScript um Typannotationen.
         Lieber Typescript für mehr Typsicherheit in React-Komponenten.
@@ -285,12 +285,11 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         React Context ermöglicht es, Props für alle Unterkomponenten zur Verfügung zu stellen.
 
         \begin{lstlisting}[language=JavaScript]
-        const ThemeContext = React.createContext(themes.light);
+        const ThemeContext = React.createContext(themes.light)
 
         function App() {
           return (
-            <ThemeContext.Provider
-              value={themes.dark}>
+            <ThemeContext.Provider value={themes.dark}>
               <Toolbar />
             </ThemeContext.Provider>
           );
@@ -299,10 +298,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         function ThemedButton() {
           const theme = useContext(ThemeContext);
           return (
-            <button style={{
-              background: theme.background,
-              color: theme.foreground
-            }}>
+            <button style={{ background: theme.background, color: theme.foreground }}>
               {" "}I am styled by theme context!{" "}
             </button>
           );
@@ -405,7 +401,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         Asynchrone Actions:
 
-        \begin{lstlisting}[belowskip=-0.8 \baselineskip, language=JavaScript]
+        \begin{lstlisting}[language=JavaScript]
         // First, create the thunk
         export const transferAsync = createAsyncThunk(
           "balance/transferApiRequest",
@@ -507,7 +503,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         Keine app-weiten Singleton-Anbieter (Dienste) in einem gemeinsamen Modul angeben.
 
         \textbf{Core-Modul}: Initialisiert globale Services.
-        Ein "lazy-loaded"-Modul, das dieses gemeinsame Modul importiert, erstellt seine eigene Kopie des Dienstes.
+        Ein "lazy-loaded"-Modul, das dieses gemeinsame Modul importiert, würde seine eigenen Kopien der Dienste erstellen, dies unterbinden.
         Wird nur vom Root-Modul importiert, der Import in ein anderes Modul, insbesondere in ein "Lazy-Load"-Modul, widerspricht der Absicht und kann zu einem Laufzeitfehler führen.
 
         \textbf{Lazy Modules}: Ähnlich wie Feature-Modules, werden aber lazy loadet wenn angefragt mittels Dependency Injection.
@@ -544,8 +540,8 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         Basiert auf MVC oder MVVM.
         Eine Komponente sollte so klein und zusammenhängend wie möglich implementiert werden, um die Testbarkeit / Wartbarkeit / Wiederverwendbarkeit zu unterstützen.
         Komponenten kontrollieren die View (genau eine View pro Komponente).
-        Mittels Selektor kann Komponent in anderen Views verwendet werden (entweder tag-name oder CSS-Selektor ( id-selector \#topHeader)), braucht Registierung im ngModule bei \lstinline{declarations} und \lstinline{exports}.
-        Lifecycle wird verwaltet von Angular (Hydration, Update, Dehydration), können mittels Methoden wie \lstinline{ngOnInit} und \lstinline{ngOnDestroy} erweitert werden.
+        Mittels Selektor kann Komponent in anderen Views verwendet werden (entweder tag-name oder CSS-Selektor (\lstinline[mathescape]!id-selector #topHeader!)), braucht Registierung im ngModule bei \lstinline{declarations} und \lstinline{exports}.
+        Lifecycle wird verwaltet von Angular (Hydration (\lstinline{ngOnInit}), Update (\lstinline{ngOnChanges}), Dehydration (\lstinline{ngOnDestroy})).
         Komponent braucht Deklaration wie \lstinline{implements OnInit, OnDestroy}, damit Methoden verwendet werden können.
         View-Code muss gültiges HTML5 sein.
 
@@ -567,13 +563,15 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         }
         \end{lstlisting}
 
-        \textbf{Bindings}: Two Way Binding / Banana in a box [( ... )].
-        One Way (from View to Model / Event Binding) ( ... ).
-        One Way (from Model to View / Property Binding) [ ... ] or {{ ... }}.
+        \textbf{Bindings}: Two Way Binding / Banana in a box \lstinline[mathescape]![( ... )]!.
+        One Way (from View to Model / Event Binding) \lstinline{( ... )}.
+        One Way (from Model to View / Property Binding) \lstinline{[ ... ]} or \lstinline[mathescape]!{{ ... }}!.
 
         \begin{lstlisting}[language=JavaScript]
         public counter: any = {
-            get team() { return null }, set team(val) { }, eventHandler: () => { }
+            get team() { return null },
+            set team(val) { },
+            eventHandler: () => { }
         }
         \end{lstlisting}\begin{lstlisting}
         <input type="text" [(ngModel)]="counter.team">
@@ -593,7 +591,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         <wed-navigation(click)="..."[title]="..."></wed-...>
         \end{lstlisting}
 
-        \textbf{Metadata}: Metadaten beschreiben eine Klasse und sagen Angular, wie sie zu verarbeiten ist (TypeScript decorator).
+        \textbf{Metadata}: Metadaten beschreiben eine Klasse und sagen Angular, wie sie zu verarbeiten ist (TypeScript decorator), wie \lstinline{@Component}.
 
         \textbf{Services}: Bietet Logik für jeden Wert, jede Funktion oder jedes Merkmal, das Ihre Anwendung benötigt (TypeScript class).
         Werden mittels Dependency Injection erstellt, wenn Komponenten Service-Abhängigkeit deklarieren.
@@ -702,9 +700,9 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         }
         \end{lstlisting}
 
-        \textbf{Component Transclusion / Content Projection}: Selbiges wie Reacts \lstinline{props.children}.
+        \textbf{Component Transclusion / Content Projection}: Selbiges wie React's \lstinline{props.children}.
 
-        \begin{lstlisting}[belowskip=-0.8 \baselineskip]
+        \begin{lstlisting}
         <wed-navigation>
             <h1 wed-title>WED3 Lecture</h1>
             <menu><!-- ... --></menu>
@@ -728,15 +726,10 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         </wed-navigation>
         \end{lstlisting}
 
-        \begin{lstlisting}[language=JavaScript]
-        var subscription = this.http.get('api/samples').subscribe(
-            function (x) { /* onNext: data received (in x) */ },
-            function (e) { /* onError: the error (e) has been thrown */ },
-            function () { /* onCompleted: the stream is closing down */ }
-        );
-        \end{lstlisting}
+        \textbf{Routing}: Routing Table mappt Routen zu Komponenten.
 
-        \textbf{Routing}: Routing Table mappt Routen zu Kompontenten.
+        \includegraphics[width=\linewidth]{angular_routing}
+
         Oberste Routen registrieren mit \lstinline{forRoot()}, Subroutes mit \lstinline{forChild()}.
         \lstinline{forRoot()} kennt auch Router-Service, welcher Singleton ist in Applikation.
         Benötigt \lstinline{<base href="/">} im Header für relative URL oder \lstinline{APP_BASE_HREF} Variable.
@@ -750,30 +743,50 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \begin{lstlisting}[language=JavaScript]
         const appRoutes: Routes = [
             {
-                path: '', component: WelcomeComponent,
-                children: [
-                    { path: ':id', component: SamplesDetailComponent },
-                ]
+                path: 'dashboard',
+                loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule),
+                canLoad: [AuthGuard]
             },
-            {
-                path: 'config',
-                loadChildren: () => import('./cfg/cfg.module').then(m => m.CfgModule), canLoad: [AuthGuard]
-            }
+
+            // Welcome module is eagerly loaded.
+            { path: '', redirectTo: '/welcome', pathMatch: 'full' },
+            { path: '**', component: WelcomeComponent }
         ];
 
         @NgModule({
-            imports: [ RouterModule.forRoot(appRoutes) ],
-            exports: [ RouterModule ]
+            imports: [RouterModule.forRoot(appRoutes)],
+            exports: [RouterModule]
         })
-        export class AppRoutingModule {}
-        \end{lstlisting}
+        export class AppRoutingModule {
+        }
 
-        \includegraphics[width=\linewidth]{angular_routing}
+        @Injectable({ providedIn: 'root' })
+        export class AuthGuard implements CanLoad {
+            constructor(private authSvc: AuthService, private router: Router) {
+            }
+
+            canLoad() {
+                if (this.authSvc.hasCredentials) {
+                    return true;
+                }
+
+                this.router.navigateByUrl("/");
+                return false;
+            }
+        }
+        \end{lstlisting}
 
         \textbf{Angular-Architekturen}: Flow architekturmässig dasselbe wie Redux.
         Redux-Anbindung mittels \lstinline{ngxs} oder \lstinline{ngrx}.
+        Applikation nach Datenkomplexität oder Grösse wie folgt erweitern:
 
-        \includegraphics[width=\linewidth]{angular_architecture_big_picture}
+        \begin{enumerate}
+            \item MVC (gegeben durch Angular)
+            \item MVC+S
+            \item Flux - Single Store
+            \item Flux - Multi Store
+            \item Redux
+        \end{enumerate}
 
         Vorteile ngrx: Einfaches Debugging, Undo/Redo einfache Implementation, weniger Code in Komponenten, weniger Change Detection Overhead.
         Nachteile: Komplexere Architektur, Datenlogik fragmentiert in Reducer / Effects, zusätzliche Bibliothek.
@@ -807,7 +820,7 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \end{lstlisting}
 
         \textbf{Pipe}: Hilfreich für kleine Transformationen, erlauben Parameter (\lstinline!<p>{{counter.date | date:'longDate'}}</p>!). Pure Pipes werden nur ausgeführt bei Änderungen am Subjekt, impure laufen bei jeder Change Detection.
-        Vorgefertige Pipes: \lstinline{async}, \lstinline{number}, \lstinline{date}, \lstinline{percent}.
+        In Angular enthaltene Pipes: \lstinline{async}, \lstinline{number}, \lstinline{date}, \lstinline{percent}.
         Async erlaubt direkte Anzeige ab Observable (\lstinline!<li *ngFor="let s of sampleService.samples$ | async">!)
         Filtering und Ordering Pipes gibt es nicht, gelten als Impure, sollte im Komponent gemacht werden.
 
@@ -832,6 +845,20 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         \textbf{Angular-Tooling}: Angular State Inspector, Redux DevTools, Ahead-Of-Time (AoT) Compilation.
 
+        \textbf{Aus dem Testat}: Form-Validations an Komponent knüpfen.
+
+        \begin{lstlisting}
+        <input matInput name="from" [(ngModel)]="target" (keyup)="this.validateTargetAccountNumber()" placeholder="To" required type="text">
+        \end{lstlisting}\begin{lstlisting}[language=JavaScript]
+        public validateTargetAccountNumber(): void {
+            if (!this.target || this.target.length <= 3) {
+                this.isTargetAccountValid = false;
+                return;
+            }
+            this.dashboardService.fetchAccountInformation(this.target);
+        }
+        \end{lstlisting}
+
         \section{.NET}
         Weshalb ASP.NET Core: Enterprise Framework, Kompilierbare Sprache (C\#), OS unabhängig.
         \textbf{Attribute}: intensiv eingesetzt (Um Konventionen zu übersteuern bzw zu unterstützen, Schnittstelle für Zusatzinformationen für Framework, Kann via "Reflection" ausgelesen werden).
@@ -848,45 +875,45 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
         \textbf{Extension Methods}: C\# erlaubt es existierenden Klassen Methoden "hinzuzufügen"
         \begin{lstlisting}[style=CSharp]
-          string s = "Hello Extension Methods";
-          int i = s.WordCount();
+        string s = "Hello Extension Methods";
+        int i = s.WordCount();
 
-          public static class MyExtensions
-          {
-            public static int WordCount(this string str) {
-              return str.Split(new char[] {' ', '.', '?'}).Length;
-            }
+        public static class MyExtensions {
+          public static int WordCount(this string str) {
+            return str.Split(new char[] {
+              ' ',
+              '.',
+              '?'
+            }).Length;
           }
+        }
         \end{lstlisting}
 
         \textbf{Async Await}
         \begin{lstlisting}[style=CSharp]
-          static async Task Main(string[] args)
-          {
-            Console.WriteLine("--");
-            await RunAsync();
-            Console.WriteLine("--");
-            Console.ReadLine();
-          }
+        static async Task Main(string[] args) {
+          Console.WriteLine("--");
+          await RunAsync();
+          Console.WriteLine("--");
+          Console.ReadLine();
+        }
 
-          public static Task<string> Send()
-          {
-            return Task.Run(() => {
-              Console.WriteLine("Send!");
-              return "nachricht gesendet";
-            });
-          }
+        public static Task < string > Send() {
+          return Task.Run(() => {
+            Console.WriteLine("Send!");
+            return "nachricht gesendet";
+          });
+        }
 
-          public static async Task<bool> RunAsync()
-          {
+        public static async Task < bool > RunAsync() {
             Console.WriteLine("Start Send");
             Console.WriteLine(await Send());
             Console.WriteLine("End Send");
             return true;
-          }
+        }
 
-          % outputs
-          % -- start send send! nachricht gesendet end send -- 
+        // outputs
+        // --start send send!nachricht gesendet end send--
         \end{lstlisting}
 
         \textbf{Convention over configuration (or coding by convention)}: seeks to decrease the number of decision that developers need to make, gaining simplicity, and not necessarily losing flexibility.
@@ -951,12 +978,12 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           }
           // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
           public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory) {
-            app.UseMiddleware < UserMiddleware > ();
+            app.UseMiddleware <UserMiddleware> ();
           }
         }
         \end{lstlisting}
 
-        DI - Lifetime: Transient: created each time they are requested. Best for lightweeight, stateless services. Scoped: created once per request. Singleton: created the first time they are requested and then every subsequent request will use the same instance.
+        DI - Lifetime: Transient: created each time they are requested. Best for lightweight, stateless services. Scoped: created once per request. Singleton: created the first time they are requested and then every subsequent request will use the same instance.
         \textbf{Captive Dependency}: Wenn Singleton Scoped Service verwendet, wird Scope Service nur einmal erzeugt, kann Probleme verursachen.
 
         \textbf{Projekt-Struktur}
@@ -998,37 +1025,30 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             }
         }
         \end{lstlisting}\begin{lstlisting}[style=CSharp]
-        public class PostModel : PageModel
-        {
-            public string EchoText { get; set; }
-            public long Times { get; set; }
-            public void OnGet()
-            {
+        public class PostModel: PageModel {
+          public string EchoText { get; set; }
+          public long Times { get; set; }
+          public void OnGet() {}
 
-            }   
-
-            public void OnPost(string echoText, long times)
-            {
-                EchoText = echoText;
-                Times = times;            
-            }
+          public void OnPost(string echoText, long times) {
+            EchoText = echoText;
+            Times = times;
+          }
         }
 
+        public class PostModel2: PageModel {
+          [BindProperty]
+          public string EchoText { get; set; }
 
-        public class PostModel2 : PageModel
-        {
-            [BindProperty]
-            public string EchoText { get; set; }
-
-            [BindProperty]
-            public long Times { get; set; }
+          [BindProperty]
+          public long Times { get; set; }
         }
         \end{lstlisting}
         \lstinline{@model}: Beschreibt Type vom View Model dieser Seite, wird in Var Model abgelegt
         PageModel: Basis-Klasse mit Hilfsfunktionen (Redirects / Event-Hooks), Aufbereitung der Daten für die View
         MVVM - Model: kann pro HTTP-Verb eine Funktion definieren die davor aufgerufen wird (\lstinline{OnGet}, \lstinline{OnPost}), Body und Query werden automatisch gemappt, Parameter werden als Argumente übergeben, können auch als Klasse entgegen genommen werden.
-        Mit [BindProperty] kann auf das Kopieren von Properties verzichtet werden, nutzen falls Properties 1:1 der View übergeben werden \lstinline{[BindProperty(SupportsGet = true)]}
-        View: @page definiert Razor-File als Page, @page "/test/{id?}" überschreibt Default-Routing Informationen
+        Mit \lstinline{[BindProperty]} kann auf das Kopieren von Properties verzichtet werden, nutzen falls Properties 1:1 der View übergeben werden \lstinline{[BindProperty(SupportsGet = true)]}
+        View: \lstinline{@page} definiert Razor-File als Page, \lstinline[mathescape]!@page "/test/{id?}"! überschreibt Default-Routing Informationen
         kann auf verschiedene Arten zugegriffen werden:
         \begin{lstlisting}
           @page "/test/{id:int?}"
@@ -1039,17 +1059,15 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           <h1>Routing</h1>
           @RouteData.Values["id"]
         \end{lstlisting}\begin{lstlisting}[style=CSharp]
-          public class RoutingModel : PageModel
-          {
-            public int Id {get;set;}
-            [BindProperty(SupportsGet = true, Name="Id")]
+        public class RoutingModel: PageModel {
+          public int Id { get; set; }
+          [BindProperty(SupportsGet = true, Name = "Id")]
 
-            public int Id2 {get;set;}
-            public void OnGet(int id)
-            {
-              Id2=id
-            }
+          public int Id2 { get; set; }
+          public void OnGet(int id) {
+            Id2 = id
           }
+        }
         \end{lstlisting}
 
         \textbf{Razor}: Wichtige Dateien: Layout: Shared/\_layout.cshtml: definiert generelle Layout für Applikation, definiert Sections, welche von Content Page abgefüllt werden.
@@ -1077,16 +1095,14 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
           <email mail-for="support@examl.com"></email>
           <a href="mailto:support@example.com">support@example.com</a>
         \end{lstlisting}\begin{lstlisting}[style=CSharp]
-          public classs EmailTagHelper : TagHelper 
-          {
-            public string MailFor {get;set;}
-            public override void Process(TagHelperContext context, TagHelperOutput ouput)
-            {
-              output.TagName = "a";
-              output.Attributes.SetAttrbutes("href", "mailto:" + MailFor);
-              output.Content.SetContent(MailFor);
-            }
+        public classs EmailTagHelper: TagHelper {
+          public string MailFor { get; set; }
+          public override void Process(TagHelperContext context, TagHelperOutput ouput) {
+            output.TagName = "a";
+            output.Attributes.SetAttrbutes("href", "mailto:" + MailFor);
+            output.Content.SetContent(MailFor);
           }
+        }
 
         // dann im ViewImports.cshtml
         @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
@@ -1126,33 +1142,28 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
             </script>
         }
         \end{lstlisting}\begin{lstlisting}[style=CSharp]
-        public class AjaxModel : PageModel
-        {
-            private readonly CitiesService _citiesService;
+        public class AjaxModel: PageModel {
+          private readonly CitiesService _citiesService;
 
-            public AjaxModel(CitiesService citiesService)
-            {
-                _citiesService = citiesService;
-            }
-            public void OnGet()
-            {
-                throw new NotSupportedException();
-            }
+          public AjaxModel(CitiesService citiesService) {
+            _citiesService = citiesService;
+          }
+          public void OnGet() {
+            throw new NotSupportedException();
+          }
 
-            public IActionResult OnGetAutocomplete(string text)
-            {
-                return new JsonResult(_citiesService.GetCities(text));
-            }
+          public IActionResult OnGetAutocomplete(string text) {
+            return new JsonResult(_citiesService.GetCities(text));
+          }
         }
         \end{lstlisting}
 
-        \textbf{Entity Framework (EF)}: objektrelationale Zuordung, die Entwickler über domänenspezifsche Objekte die Nutzung relationaler Daten ermöglicht. (wenig Code, viele Konvention, OR-Mapper). SQL-Rows auf Klasse mappen, Relationen auflöseen und richtig setzen.
+        \textbf{Entity Framework (EF)}: objektrelationale Zuordung, die Entwickler über domänenspezifsche Objekte die Nutzung relationaler Daten ermöglicht. (wenig Code, viele Konvention, OR-Mapper). SQL-Rows auf Klasse mappen, Relationen auflösen und richtig setzen.
         Code First benötigt; type discovery: welche Klassen gehören in die DB, Connection String: Wohin mit Daten, DbContext: Entry Point
         Konfiguration im \lstinline{Startup.cs}, Connection String dann im \lstinline{appsettings.json}.
 
         \begin{lstlisting}[style=CSharp]
-          public class Order
-          {
+          public class Order {
             public long Id {get;set;}
             [Required]
             public string Name {get;set;}
@@ -1286,16 +1297,23 @@ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
         \textbf{Cypress}: E2E testing, gibt für Angular ein Schematic-Paket, bei React muss manuell verhängt werden.
 
         Progressive Web App selber: Web-Applikation, die sich anfühlt wie eine native Applikation.
-        Investition lohnt sich, anscheinend gute Conversion Rate.
+        Investition lohnt sich, anscheinend gute Conversion Rate für Online-Shops.
         Alternative: Native Applikation, lohnt sich eventuell nicht, da Nutzer nicht viel zwischen Apps hin- und herspringen.
 
         Eigenschaften PWA: \textbf{Safe}: Muss über HTTPS ausgeliefert werden.
+
         \textbf{Responsive}: Das UI soll für alle Grössen passen.
+
         \textbf{Progressive}: Die neuen API’s nutzen, um die bestmögliche UX zu erreichen, ohne die älteren Browser zu ignorieren.
+
         \textbf{Linkable}: Teilen von Inhalten ohne das der Sharing-Partner eine App installieren muss.
+
         \textbf{Discoverable}: Die Webseite soll über Suchmaschinen auffindbar sein.
+
         \textbf{Installable}: Die Web Applikation mit Icon auf den Startbildschirm speichern (Web App Manifest).
+
         \textbf{Network independent}: Die App soll auch mit schlechter, langsamer oder sogar gar keiner Verbindung funktionieren.
+
         \textbf{Re-engageable}: Es soll möglich sein das die Verbindung zum Benutzer der Seite wieder aufgenommen werden, obwohl der Benutzer die Seite nicht geöffnet hat (Service Workers, Push-API).
 
         PWA-Installation kann mittels JavaScript gemacht werden.
